@@ -23,24 +23,37 @@ class ArduinoHandler(object):  # Deals with arduino
         time.sleep(5)  # For adjustment
         print("Connection established with Arduino, at port - " +
               self.serialPort + "with baudrate - " + str(self.baudrate))
+        # to avoid sending repeated STOP command, as it is needed only ONCE.
+        self.is_already_stopped = False
 
     def controlCar(self, command, turnAngle=60):
         # Know the command  sent by the RPi, and sent appropriate signal that Arduino can understand..
+        # to distinguish the messages of this program.
+        print("[util] :: ", end="")
         if command == 'FORWARD':
             print("Forward")
             self.ser.write('F'.encode())
+            self.is_already_stopped = False
         elif command == 'BACKWARD':
             print("Backward ")
             self.ser.write('B'.encode())
+            self.is_already_stopped = False
         elif command == 'LEFT':
             print("<-- Left ")
             self.ser.write('L'.encode())
+            self.is_already_stopped = False
         elif command == 'RIGHT':
             print("Right-->>")
             self.ser.write('R'.encode())
+            self.is_already_stopped = False
         elif command == 'STOP' or command == 'QUIT':
-            print("STOPPED..!!")
-            self.ser.write('S'.encode())
+            if self.is_already_stopped == False:        # Send STOP command, ONLY if not stopped
+                print("STOPPING..!!", end="")
+                self.ser.write('S'.encode())
+                self.is_already_stopped = True
+                print('STOPPED..!!')
+            else:
+                print('Already STOPped.')
         # elif command == "FWD_LFT":
         #     print("Forward-Left")
         #     self.ser.write(chr(5).encode())
