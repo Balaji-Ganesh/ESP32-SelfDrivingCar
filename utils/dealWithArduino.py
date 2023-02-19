@@ -11,8 +11,6 @@ import serial  # To have a serial communication between the Arduino
 import time
 
 # Deals with arduino
-
-
 class dealWithArduino(object):
     ser = serial.Serial(port='/dev/ttyACM0', baudrate=9600)
 
