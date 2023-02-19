@@ -8,7 +8,7 @@ The purpose of this program is to interact with the car with in manual mode
 # importing required libraries
 import serial  # for serial communication with the Arduino
 import pygame  # For sensing the keyboard keys which serves as a joystick or a remote to contorl the car
-# from FinalCheckingOfCodes.dealWithArduino import dealWithArduino
+from utils.dealWithArduino import ArduinoHandler
 import socket
 
 
@@ -21,37 +21,27 @@ class ManualControl(object):
         # Changing the window name
         pygame.display.set_caption("Car control in Manual Mode")
         # Background
-        self.backgroundImg = pygame.image.load('greenBoard.jpg')
+        self.backgroundImg = pygame.image.load('../assets/greenBoard.jpg')
         # Changing the window icon
-        pygameIcon = pygame.image.load('car.png')
+        pygameIcon = pygame.image.load('../assets/car.png')
         pygame.display.set_icon(pygameIcon)
 
         # taking the font to display direction in which the car is moving..
-        self.directionFont = pygame.font.Font('comicSans.ttf', 32)
+        self.directionFont = pygame.font.Font('../assets/comicSans.ttf', 32)
         # Where the font should display..(ie., Co-ordinates)
         self.textX, self.textY = 200, 130
+
         self.controlText = ""  # Updated while key stroke is recorded..
 
         # Taking the font to display the obstacle distance
-        self.obstacleDistanceFont = pygame.font.Font('arial.ttf', 20)
+        self.obstacleDistanceFont = pygame.font.Font('../assets/arial.ttf', 20)
 
         # To run the car_control_loop (while loop in steerTheCar)infinitely till the user quits..
         self.runTheCar = True
-        # Creating the object of dealWithArduino to contact with the hardware..
-        # self.arduinoControl = dealWithArduino()  # to interface with the Arduino control program
-        try:
-            sock = socket.socket()
-            sock.bind(('', 9999))
-            sock.listen()
-            self.conn, self.addresses = sock.accept()
-            print("self.connection established with " +
-                  str(self.addresses[0]) + ":"+str(self.addresses[1]))
-            print("Starting the actual control..")
-            # self.conn.send('RUN_CAR'.encode())
-        except socket.error as error:
-            print(error)
-
-        self.steerTheCar()
+        # Creating the object of ArduinoHandler to contact with the hardware..
+        # to interface with the Arduino control program
+        self.arduinoControl = ArduinoHandler()
+        self.steerTheCar()  # Start steering after setup.
 
     def steerTheCar(self):
         # car_control_loop
@@ -63,82 +53,60 @@ class ManualControl(object):
             self.screen.blit(self.backgroundImg, (0, 0))
 
             for event in pygame.event.get():
-                # When the controller presses the X control button on top of the title bar..
-                if event.type == pygame.QUIT:
-                    # Exiting safely by sending th 'EXIT' as a command (By this we come out of infinite loop where it gets commands from the pygame window and keys..)
-                    self.conn.send('EXIT'.encode())
-                    # Quitting the Remote control mode, (By this we we even come out from the infinite loop of command mode..)
-                    self.conn.send('QUIT'.encode())
-                    print(
-                        "Close Notice: ADMINISTRATOR HAS ENDED THE SESSION OF CONTROLLING CAR IN MANUAL MODE..")
-                    self.runTheCar = False  # Making false to stop the car..
-
                 if event.type == pygame.KEYDOWN:
                     # Will return the list of all the keys pressed
-                    key_pressed = pygame.key.get_pressed()
+                    # key_pressed = pygame.key.get_pressed() -- needed for complex controls, not for normal.
                     print("Sensed the keydown action of keyboard")
 
                     # Normal Controls...
                     if event.key == pygame.K_LEFT:
-                        print("Turned left")
-                        self.controlText = "Turned LEFT"
-                        # self.arduinoControl.controlCar('LEFT')
-                        self.conn.send('LEFT'.encode())
+                        self.controlText = "LEFT"
+                        self.arduinoControl.controlCar('LEFT')
 
                     elif event.key == pygame.K_RIGHT:
-                        print("Turned right")
-                        self.controlText = "Turned RIGHT"
-                        # self.arduinoControl.controlCar('RIGHT')
-                        self.conn.send('RIGHT'.encode())
+                        self.controlText = "RIGHT"
+                        self.arduinoControl.controlCar('RIGHT')
 
                     elif event.key == pygame.K_UP:
-                        print("Moving Forward")
                         self.controlText = "FORWARD"
-                        # self.arduinoControl.controlCar('FORWARD')
-                        self.conn.send('FORWARD'.encode())
+                        self.arduinoControl.controlCar('FORWARD')
 
                     elif event.key == pygame.K_DOWN:
-                        print("Moving Backward")
                         self.controlText = "BACKWARD"
-                        # self.arduinoControl.controlCar('BACKWARD')
-                        self.conn.send('BACKWARD'.encode())
+                        self.arduinoControl.controlCar('BACKWARD')
 
                     elif event.key == pygame.K_SPACE:
-                        print("Stopped..")
                         self.controlText = "Stopped"
-                        # self.arduinoControl.controlCar('STOP')
-                        self.conn.send('STOP'.encode())
-
-                    # A bit complex controls
-                    elif key_pressed[pygame.K_UP] and key_pressed[pygame.K_RIGHT]:
-                        print("Moving Right Forward")
-                        self.controlText = "Right Forward"
-                        # self.arduinoControl.controlCar('FWD_RGHT')
-                        self.conn.send('FWD_RGHT'.encode())
-
-                    elif key_pressed[pygame.K_UP] and key_pressed[pygame.K_LEFT]:
-                        print("Left Forward")
-                        self.controlText = "Left Forward"
-                        # self.arduinoControl.controlCar('FWD_LEFT')
-                        self.conn.send('FWD_LEFT'.encode())
-
-                    elif key_pressed[pygame.K_DOWN] and key_pressed[pygame.K_RIGHT]:
-                        print("Moving Right Forward")
-                        self.controlText = "Right Backward"
-                        # self.arduinoControl.controlCar('BWD_RGHT')
-                        self.conn.send('BWD_RGHT'.encode())
-
-                    elif key_pressed[pygame.K_DOWN] and key_pressed[pygame.K_LEFT]:
-                        print("Moving Right Forward")
-                        self.controlText = "Left Backward"
-                        # self.arduinoControl.controlCar('BWD_LEFT')
-                        self.conn.send('BWD_LEFT'.encode())
+                        self.arduinoControl.controlCar('STOP')
 
                     elif event.type == pygame.QUIT:
-                        print('Quitting..')
-                        self.conn.send('EXIT'.encode())
+                        self.controlText = "Manual control - QUIT.!!"
                         break
 
+                    # A bit complex controls -- for car design of model_1: like actual car.
+                    # For this model_2: Not required.
+                    # elif key_pressed[pygame.K_UP] and key_pressed[pygame.K_RIGHT]:
+                    #     self.controlText = "Right Forward"
+                    #     # self.arduinoControl.controlCar('FWD_RGHT')
+                    #     self.conn.send('FWD_RGHT'.encode())
+
+                    # elif key_pressed[pygame.K_UP] and key_pressed[pygame.K_LEFT]:
+                    #     self.controlText = "Left Forward"
+                    #     # self.arduinoControl.controlCar('FWD_LEFT')
+                    #     self.conn.send('FWD_LEFT'.encode())
+
+                    # elif key_pressed[pygame.K_DOWN] and key_pressed[pygame.K_RIGHT]:
+                    #     self.controlText = "Right Backward"
+                    #     # self.arduinoControl.controlCar('BWD_RGHT')
+                    #     self.conn.send('BWD_RGHT'.encode())
+
+                    # elif key_pressed[pygame.K_DOWN] and key_pressed[pygame.K_LEFT]:
+                    #     self.controlText = "Left Backward"
+                    #     # self.arduinoControl.controlCar('BWD_LEFT')
+                    #     self.conn.send('BWD_LEFT'.encode())
+
+            # print on console..
+            print(self.controlText)
             # Displaying the direction on the window
             self.displayControlDirection(
                 controlText=self.controlText, ordinates=(self.textX, self.textY))
