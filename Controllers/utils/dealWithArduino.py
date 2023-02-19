@@ -38,7 +38,7 @@ class ArduinoHandler(object):  # Deals with arduino
         elif command == 'RIGHT':
             print("Right-->>")
             self.ser.write('R'.encode())
-        elif command == 'STOP':
+        elif command == 'STOP' or command == 'QUIT':
             print("STOPPED..!!")
             self.ser.write('S'.encode())
         # elif command == "FWD_LFT":
@@ -55,7 +55,7 @@ class ArduinoHandler(object):  # Deals with arduino
         #     self.ser.write(chr(8).encode())
 
         else:
-            print('Unknown command received..!!!')
+            print('Unknown command received: '+str(command))
 
     def receiveSensorData(self):
         if self.ser.in_waiting > 0:

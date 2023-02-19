@@ -61,26 +61,21 @@ class ManualControl(object):
                     # Normal Controls...
                     if event.key == pygame.K_LEFT:
                         self.controlText = "LEFT"
-                        self.arduinoControl.controlCar('LEFT')
 
                     elif event.key == pygame.K_RIGHT:
                         self.controlText = "RIGHT"
-                        self.arduinoControl.controlCar('RIGHT')
 
                     elif event.key == pygame.K_UP:
                         self.controlText = "FORWARD"
-                        self.arduinoControl.controlCar('FORWARD')
 
                     elif event.key == pygame.K_DOWN:
                         self.controlText = "BACKWARD"
-                        self.arduinoControl.controlCar('BACKWARD')
 
                     elif event.key == pygame.K_SPACE:
-                        self.controlText = "Stopped"
-                        self.arduinoControl.controlCar('STOP')
+                        self.controlText = "STOP"
 
                     elif event.type == pygame.QUIT:
-                        self.controlText = "Manual control - QUIT.!!"
+                        self.controlText = "QUIT"
                         break
 
                     # A bit complex controls -- for car design of model_1: like actual car.
@@ -105,11 +100,16 @@ class ManualControl(object):
                     #     # self.arduinoControl.controlCar('BWD_LEFT')
                     #     self.conn.send('BWD_LEFT'.encode())
 
+                else:  # if no direction key pressed .. take as stop
+                    self.controlText = 'STOP'
+
             # print on console..
             print(self.controlText)
             # Displaying the direction on the window
             self.displayControlDirection(
                 controlText=self.controlText, ordinates=(self.textX, self.textY))
+            # Send the control..
+            self.arduinoControl.controlCar(self.controlText)
 
             # Displaying the obstacle distance data on the screen
             # distance = self.arduinoControl.receiveSensorData()
