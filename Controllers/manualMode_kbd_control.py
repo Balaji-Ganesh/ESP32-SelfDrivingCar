@@ -104,7 +104,7 @@ class ManualControl(object):
                     self.controlText = 'STOP'
 
             # print on console..
-            print(self.controlText)
+            print('[manual_kbd_controller] :: '+self.controlText)
             # Displaying the direction on the window
             self.displayControlDirection(
                 controlText=self.controlText, ordinates=(self.textX, self.textY))
