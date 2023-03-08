@@ -1,27 +1,28 @@
 /*
-connection schematic..
-  connect motors as per the labels on the sheild as below.
-  !! Make sure to connect the + and - terminals of motors properly.
-
-                FORWARD
-              ^^^^^^^^^^^
-              M2      M1
-  RIGHT <<-   ..      ..   -->>> LEFT
-              M3      M4
-              \/\/\/\/\/
-               BACKWARD
-
-  with android app: 'Bluetooth RC Car'
+This script is merge of `collision_avoidance` and `./ArduinoSketches/BluetoothControl_with_L239D/ContinousStream_v0.1`
 
 */
 
 #include <AFMotor.h>  // library for controlling motors.
+#include <NewPing.h>
+
+#define TRIGGER_PIN A0             // Arduino pin tied to trigger pin on the ultrasonic sensor.
+#define ECHO_PIN A1                // Arduino pin tied to echo pin on the ultrasonic sensor.
+#define MAX_DISTANCE 200           // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
+#define MAX_COLLISION_DISTANCE 10  // At what distance from car, going further fwd is to be stopped.
 
 // Defining the motors to be used -- with their frequency
 AF_DCMotor motor1(1, MOTOR12_64KHZ);
 AF_DCMotor motor2(2, MOTOR12_64KHZ);
 AF_DCMotor motor3(3, MOTOR12_64KHZ);
 AF_DCMotor motor4(4, MOTOR12_64KHZ);
+
+// defining collision avoidance required pins
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);  // NewPing setup of pins and maximum distance.
+int buzzerPin = A2;
+int redLedPin = A3;
+int greenLedPin = A4;
+int collision_distance = 0;  // to perform other actions based on collision..
 
 // Helper function declarations..
 void set_dir_command(char command);
@@ -36,16 +37,25 @@ void setup() {
   motor4.setSpeed(250);
   // Setup the serial communication
   Serial.begin(9600);
-  // pinMode(hornPin, OUTPUT);
+  // setup the pins of collision avoidance
+  pinMode(buzzerPin, OUTPUT);
+  pinMode(redLedPin, OUTPUT);
+  pinMode(greenLedPin, OUTPUT);
 }
 
 void loop() {
+  receive_control_commands();
+  pingCollisionDistance();
+}
+
+/*** Motor controls ***/
+void receive_control_commands() {
   if (Serial.available() > 0) {
     char data = Serial.read();
     Serial.print("Received data: ");
     Serial.println(data);
     set_dir_command(data);  // perform direction.
-  } else {    // When received no command -- stop.
+  } else {                  // When received no command -- stop.
     Serial.println("[INFO] No command received: STOP state.");
     set_dir_command('S');
   }
@@ -71,10 +81,14 @@ void set_dir_command(char command) {  // set-direction-command: {FORWARD, BACKWA
     case 'F':
       {
         Serial.println("FORWARD");
-        motor1.run(FORWARD);
-        motor2.run(FORWARD);
-        motor3.run(FORWARD);
-        motor4.run(FORWARD);
+        if (collision_distance < MAX_COLLISION_DISTANCE) {
+          Serial.print("!!Warning!!: Collision ahead. Cannot go FWD, try other directions.");
+        } else {
+          motor1.run(FORWARD);
+          motor2.run(FORWARD);
+          motor3.run(FORWARD);
+          motor4.run(FORWARD);
+        }
         break;
       }
     case 'B':
@@ -131,5 +145,24 @@ void set_dir_command(char command) {  // set-direction-command: {FORWARD, BACKWA
         motor4.run(RELEASE);
         break;
       }
+  }
+}
+
+/** Collision Avoidance **/
+void pingCollisionDistance() {
+  delay(50);  // Wait 50ms between pings (about 20 pings/sec). 29ms should be the shortest delay between pings.
+  Serial.print("Ping: ");
+  collision_distance = sonar.ping_cm();
+  Serial.print(collision_distance);  // Send ping, get distance in cm and print result (0 = outside set distance range)
+  Serial.println("cm");
+  if (collision_distance <= MAX_COLLISION_DISTANCE) {  // when collision is at or less than 10cm's.
+    digitalWrite(buzzerPin, HIGH);
+    digitalWrite(redLedPin, HIGH);
+    digitalWrite(greenLedPin, LOW);
+    Serial.println("Collision is nearby");
+  } else {
+    digitalWrite(buzzerPin, LOW);
+    digitalWrite(redLedPin, LOW);
+    digitalWrite(greenLedPin, HIGH);
   }
 }
