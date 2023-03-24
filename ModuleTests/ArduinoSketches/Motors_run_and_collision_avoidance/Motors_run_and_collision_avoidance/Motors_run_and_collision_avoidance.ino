@@ -12,10 +12,10 @@ This script is merge of `collision_avoidance` and `./ArduinoSketches/BluetoothCo
 #define MAX_COLLISION_DISTANCE 10  // At what distance from car, going further fwd is to be stopped.
 
 // Defining the motors to be used -- with their frequency
-AF_DCMotor motor1(1, MOTOR12_64KHZ);
-AF_DCMotor motor2(2, MOTOR12_64KHZ);
-AF_DCMotor motor3(3, MOTOR12_64KHZ);
-AF_DCMotor motor4(4, MOTOR12_64KHZ);
+AF_DCMotor motor1(1, MOTOR34_8KHZ);
+AF_DCMotor motor2(2, MOTOR34_8KHZ);
+AF_DCMotor motor3(3, MOTOR34_8KHZ);
+AF_DCMotor motor4(4, MOTOR34_8KHZ);
 
 // defining collision avoidance required pins
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);  // NewPing setup of pins and maximum distance.
@@ -64,12 +64,17 @@ void receive_control_commands() {
 void set_dir_command(char command) {  // set-direction-command: {FORWARD, BACKWARD, RELEASE}
   Serial.print("Command ::::::::: ");
   // set the speed level..
-  if (command != 'S') {
+  if (command == 'F' || command == 'B') {
+    motor1.setSpeed(180);
+    motor1.setSpeed(180);
+    motor2.setSpeed(180);
+    motor3.setSpeed(180);
+  }else if (command == 'L' || command == 'R'){
     motor1.setSpeed(250);
     motor1.setSpeed(250);
     motor2.setSpeed(250);
     motor3.setSpeed(250);
-  } else {
+    }  else {
     motor1.setSpeed(0);
     motor1.setSpeed(0);
     motor2.setSpeed(0);
@@ -81,8 +86,12 @@ void set_dir_command(char command) {  // set-direction-command: {FORWARD, BACKWA
     case 'F':
       {
         Serial.println("FORWARD");
-        if (collision_distance < MAX_COLLISION_DISTANCE) {
+        if (collision_distance <= MAX_COLLISION_DISTANCE) {
           Serial.print("!!Warning!!: Collision ahead. Cannot go FWD, try other directions.");
+          motor1.run(RELEASE);
+          motor2.run(RELEASE);
+          motor3.run(RELEASE);
+          motor4.run(RELEASE);
         } else {
           motor1.run(FORWARD);
           motor2.run(FORWARD);
