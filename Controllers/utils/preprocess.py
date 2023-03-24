@@ -81,7 +81,11 @@ def apply_color_transform(img):
     preprocessImage = np.zeros_like(img[:,:,0])
     preprocessImage[((gradx == 1) & (grady ==1) | (c_binary == 1))] = 255
     
-    return preprocessImage
+    # Remove the noise and join the patches of road.
+    kernel = np.ones((5, 5), np.uint8)
+    eroded = cv2.erode(preprocessImage, kernel, iterations=1)
+    dilated = cv2.dilate(preprocessImage, kernel, iterations=1)
+    return dilated
 
 def threshold(image):
 #     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
