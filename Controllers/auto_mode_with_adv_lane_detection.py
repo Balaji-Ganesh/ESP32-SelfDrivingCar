@@ -62,9 +62,13 @@ def simple_pipeline(frame):
     return frame
 
 
-def detail_pipeline(frame, f_cnt):
+def detail_pipeline(frame, f_cnt=-1):
     """
     @brief: does the same work as of `simple_pipeline()` with detailing each step.
+    @param frame: the frame to be processed.
+    @param f_cnt: frame count. 
+        Set to default, as in record_feed mode, moviepy gives only `frame` to this function.
+    
     NOTE
     ----
     - read the doc of `simple_pipeline()`for more info.
@@ -114,7 +118,7 @@ def detail_pipeline(frame, f_cnt):
 def processFrames(infile, outfile):
     output = outfile
     clip = VideoFileClip(infile)
-    processingClip = clip.fl_image(simple_pipeline)
+    processingClip = clip.fl_image(detail_pipeline)
     processingClip.write_videofile(output, audio=True)
 
 
@@ -154,8 +158,8 @@ if __name__ == "__main__":
     if (choice == 1):
         print("[INFO] Chosen Mode: Work on recorded feed.")
         print("[NOTE] Please re-check the path of recorded feed.")
-        infile = "./../data/road_video_at_11h52m20s_forward_route.mp4"
-        outfile = "./../data/road_video_at_11h52m20s_forward_route_output.mp4"
+        infile = "road_video_at_11h53m43s_backward_route.mp4"
+        outfile = "road_video_at_11h53m43s_backward_route_detail_output.mp4"
         main_run_rec_video(infile, outfile)
     elif (choice == 2):
         print("[INFO] Chosen Mode: Work on live feed.")
