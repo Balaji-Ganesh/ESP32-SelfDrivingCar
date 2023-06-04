@@ -1,0 +1,6 @@
+- This functionality is almost same as of the another sibling folder `CameraStreaming`.
+- It is based on the standard example provided by the ESP32.
+- This is somewhat simplified one.
+- This folder contains scripts of 
+    - specific use mainly for understanding the clear functionality.
+    - Amalgamation of different scripts of the same folder - to test, how they work together.
