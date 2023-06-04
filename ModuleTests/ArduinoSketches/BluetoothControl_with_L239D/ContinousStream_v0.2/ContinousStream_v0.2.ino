@@ -35,12 +35,14 @@ enum {
   RGHT,  // 4
 };
 
+int power=200;;
+
 void setup() {
   // set the speed level of motors.
-  motor1.setSpeed(255);
-  motor2.setSpeed(255);
-  motor3.setSpeed(250);
-  motor4.setSpeed(250);
+  motor1.setSpeed(power);
+  motor2.setSpeed(power);
+  motor3.setSpeed(power);
+  motor4.setSpeed(power);
   // Setup the serial communication
   Serial.begin(9600);
   Serial.println("commands: ");
@@ -55,10 +57,10 @@ void loop() {
   if (Serial.available() > 0) {
     char data = Serial.read();
     Serial.print("Received data: ");
-    Serial.println(data-49);
-    set_dir_command(data-49);  // perform direction.
+    Serial.println(data-48);
+    set_dir_command(data-48);  // perform direction.
   } else {
-    // set_dir_command(STOP);
+//     set_dir_command(STOP);
   }
 }
 
@@ -66,15 +68,16 @@ void set_dir_command(uint8_t command) {  // set-direction-command: {FORWARD, BAC
   Serial.print("Command ::::::::: ");
   // set the speed level..
   if (command != STOP) {
-    motor1.setSpeed(250);
-    motor1.setSpeed(250);
-    motor2.setSpeed(250);
-    motor3.setSpeed(250);
+    motor1.setSpeed(power);
+    motor2.setSpeed(power);
+    motor3.setSpeed(power);
+    motor4.setSpeed(power);
   } else {
-    motor1.setSpeed(0);
     motor1.setSpeed(0);
     motor2.setSpeed(0);
     motor3.setSpeed(0);
+    motor4
+    .setSpeed(0);
   }
 
   // perform respective action..
@@ -101,18 +104,18 @@ void set_dir_command(uint8_t command) {  // set-direction-command: {FORWARD, BAC
       {
         Serial.println("LEFT");
         motor1.run(BACKWARD);
-        motor2.run(BACKWARD);
+        motor2.run(FORWARD);
         motor3.run(FORWARD);
-        motor4.run(FORWARD);
+        motor4.run(BACKWARD);
         break;
       }
     case RGHT:
       {
         Serial.println("RIGHT");
         motor1.run(FORWARD);
-        motor2.run(FORWARD);
+        motor2.run(BACKWARD);
         motor3.run(BACKWARD);
-        motor4.run(BACKWARD);
+        motor4.run(FORWARD);
         break;
       }
     case STOP:
