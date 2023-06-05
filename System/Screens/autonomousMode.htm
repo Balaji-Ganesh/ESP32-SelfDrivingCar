@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Autonomous Mode - Self-driving car</title>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <button>Go Back</button>
+        <span>Self Driving car logo</span>
+        <button>Connection logo</button>
+      </nav>
+      <h1>Autonomous Mode</h1>
+      <p>
+        In this mode, car runs by itself based on the training given in training
+        mode. User can tweak between various features and parameters to
+        effectively understand the decisions taken by the car.
+      </p>
+      <div class="autonomous-level">
+        <span>Choose the autonomous level: Radio buttons</span>
+        <ul>
+            <li>Semi-autonomous - Car makes all the decisions based on inputs provided, user has the control to decide navigations.</li>
+            <li>Fully-autonomous - Car makes all the decisions. User will just be like a spectator. No manual intervention.</li>
+        </ul>
+      </div>
+      <hr />
+    </header>
+    <section>
+      <div class="content">
+        <div class="features">
+          Find way of grouping with legend .. box.. Each feature with a check
+          box. Use format like of cards.
+          <div class="lane-detection">
+            <span>Lane Detection - radio buttons</span>
+            <ul>
+              <li>Simple Lane Detection - to detect straight road lanes</li>
+              <li>Advanced lane detection - To detect curvy road lanes</li>
+              <li>CNN based lane detection - in next version</li>
+            </ul>
+          </div>
+          <div class="object-detection">
+            <span>Lane Detection - check boxes</span>
+            <ul>
+              <li>
+                Traffic lights detection - detect traffic lights and take the
+                decisions accordingly.
+              </li>
+              <li>
+                Traffic signs detection - Detect signs such as STOP, one way..
+                and act accordingly.
+              </li>
+              <li>Vechicle Detection - In next version</li>
+            </ul>
+          </div>
+          <div class="safety">
+            <span>Collision avoidance - checkboxes</span>
+            <ul>
+              <li>Ultrasonic based collision avoidance</li>
+            </ul>
+          </div>
+        </div>
+        <div class="monitor">
+          <div class="display-options">
+            <span>Display mode</span>
+            <ul>
+              <li>
+                Final output - shows only final processed output of decision
+                made
+              </li>
+              <li>
+                Detail output - shows each key stage output in making decision.
+                Useful for finding errors caused in decision-making.
+              </li>
+            </ul>
+          </div>
+          <div class="feed">
+            <div class="camera-feed">
+              A window like google meet to stream camera data.
+            </div>
+            <div class="collision-avoidance-feed">
+              <p>Change collision threshold value: ........................</p>
+              <p>Collision at: XXcm</p>
+            </div>
+          </div>
+          <div class="controls">
+            <div class="recording">
+              <span>Recording - records entire process for further analysis.</span>
+              <button>Start/Stop Recording</button>
+              <button>Pause/Resume recording</button>
+            </div>
+            <div class="navigation">
+              This can be turn ON/OFF based on autonomous mode.
+              
+                For manual overriding -- also provide feature of controlling via navigation keys. And
+              even change the design of controls.
+              
+              <ul>
+                <li><button>Up</button></li>
+                <li><button>Left</button></li>
+                <li><button>Right</button></li>
+                <li><button>Down</button></li>
+              </ul>
+              A slider at her to adjust the speed. A text box to display the
+              current speed.
+            </div>
+          </div>
+          <div class="log">
+            To display the log of decisions taken -- format like of YouTube live.
+          </div>
+        </div>
+      </div>
+    </section>
+    <footer>Contributions Provide github link.
+        <p>An idea: Semi-Supervision mode. All the decisions taken based on inputs are shown + user finally decides the navigation controls.</p>
+    </footer>
+  </body>
+</html>
