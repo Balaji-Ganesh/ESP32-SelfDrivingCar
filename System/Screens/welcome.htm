@@ -15,29 +15,36 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
   </head>
   <body>
-    <nav class="navbar navbar-inverse">
-      <div class="container-fluid">
-        <div class="navbar-header">
-          <a class="navbar-brand" href="#">Self-Driving car logo</a>
+    <header>
+      <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <a class="navbar-brand" href="#">Self-Driving car logo</a>
+          </div>
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Welcome</a></li>
+            <li><a href="#">Manual mode</a></li>
+            <li><a href="#">Training Mode</a></li>
+            <li><a href="#">Autonomous Mode</a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right m-5">
+            <li>
+              <span>Status</span>
+              <button class="btn btn-danger navbar-btn m-3">
+                Not Connected
+              </button>
+              <!-- Based on connection status change the color of the button. And contents - when connected: car's IP. -->
+            </li>
+          </ul>
         </div>
-        <ul class="nav navbar-nav">
-          <li class="active"><a href="#">Welcome</a></li>
-          <li><a href="#">Manual mode</a></li>
-          <li><a href="#">Training Mode</a></li>
-          <li><a href="#">Autonomous Mode</a></li>
-        </ul>
-        <ul class="nav navbar-nav navbar-right m-5">
-          <li>
-            <span>Status</span>
-            <button class="btn btn-danger navbar-btn m-3">Not Connected</button>
-            <!-- Based on connection status change the color of the button. And contents - when connected: car's IP. -->
-          </li>
-        </ul>
+      </nav>
+      <div class="jumbotron-text-center">
+        <div class="container">
+          <h1 class="jumbotron-heading">Self-Driving car</h1>
+          <p class="lead text-muted">An undergrad major project</p>
+          <hr/>
+        </div>
       </div>
-    </nav>
-    <header class="container page-header">
-      <h1>Self-Driving car</h1>
-      <span>An undergrad major project</span>
     </header>
     <main>
       <div class="container">
@@ -62,7 +69,7 @@
         </div>
       </div>
     </main>
-    <footer class="footer mt-auto py-3 bg-body-tertiary navbar-fixed-bottom">
+    <footer class="footer text-muted navbar-fixed-bottom">
       <div class="container">
         <span class="text-body-secondary">
           Contributions Provide github link.
