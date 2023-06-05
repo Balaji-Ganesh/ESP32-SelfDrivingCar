@@ -1,33 +1,73 @@
 <!DOCTYPE html>
-<html>  <head>
+<html>
+  <head>
     <title>Welcome - Self-driving car</title>
+    <!-- Latest compiled and minified CSS -->
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
   </head>
   <body>
-    <header>
+    <nav class="navbar navbar-inverse">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">Self-Driving car logo</a>
+        </div>
+        <ul class="nav navbar-nav">
+          <li class="active"><a href="#">Welcome</a></li>
+          <li><a href="#">Manual mode</a></li>
+          <li><a href="#">Training Mode</a></li>
+          <li><a href="#">Autonomous Mode</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right m-5">
+          <li>
+            <span>Status</span>
+            <button class="btn btn-danger navbar-btn m-3">Not Connected</button>
+            <!-- Based on connection status change the color of the button. And contents - when connected: car's IP. -->
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <header class="container page-header">
       <h1>Self-Driving car</h1>
       <span>An undergrad major project</span>
-      <hr />
     </header>
-    <section>
-      <div class="content">
-        <div class="client-connection">
-            <p>Connection Status: xxxxx</p>
-            <button>Connect/Disconnect</button>
-            <p class="client-info">
-                <span>Client ID or IP</span>
-                <span>192.168.165.102</span>
-            </p>
-        </div>
+    <main>
+      <div class="container">
         <div class="run-modes">
           <span class="short-info">Please choose an option to run.</span>
-          <ul>
-            <li><button>Manual Survelliance mode</button></li>
-            <li><button>Training Mode</button></li>
-            <li><button>Autonomous Mode</button></li>
+
+          <ul class="list-unstyled">
+            <li>
+              <button class="btn" style="margin: 5px 0px">
+                Manual Survelliance mode
+              </button>
+            </li>
+            <li>
+              <button class="btn" style="margin: 5px 0px">Training Mode</button>
+            </li>
+            <li class="p-5 m-5">
+              <button class="btn" style="margin: 5px 0px">
+                Autonomous Mode
+              </button>
+            </li>
           </ul>
         </div>
       </div>
-    </section>
-    <footer>Contributions Provide github link.</footer>
+    </main>
+    <footer class="footer mt-auto py-3 bg-body-tertiary navbar-fixed-bottom">
+      <div class="container">
+        <span class="text-body-secondary">
+          Contributions Provide github link.
+        </span>
+      </div>
+    </footer>
   </body>
 </html>
