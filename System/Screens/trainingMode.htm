@@ -2,71 +2,246 @@
 <html>
   <head>
     <title>Training Mode - Self-driving car</title>
+    <!-- Latest compiled and minified CSS -->
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
   </head>
   <body>
     <header>
-      <nav>
-        <button>Go Back</button>
-        <span>Self Driving car logo</span>
-        <button>Connection logo</button>
-      </nav>
-      <h1>Training Mode</h1>
-      <p>
-        In this mode, car is set in training mode. For purpose of training - all
-        the navigation controls, camera feed and ultrasonic feed are record for
-        training.
-      </p>
-      <p>
-        The user will be like a guide in issuing proper controls based on the
-        surrounding environments. Note that, the quality of training data has
-        direct impact on training. i.e., to say - if had bad training, then
-        performs worst, vice versa if good training.
-      </p>
-      <hr />
-    </header>
-    <section>
-      <div class="content">
-        <div class="features">
-          Find way of grouping with legend .. box.. Each feature with a check
-          box.
-          <ul>
-            <li>Camera Streaming</li>
-            <li>Collision Avoidance</li>
-            <li>Navigation</li>
+      <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <a class="navbar-brand" href="#">Self-Driving car logo</a>
+          </div>
+          <ul class="nav navbar-nav">
+            <li><a href="#">Welcome</a></li>
+            <li><a href="#">Manual mode</a></li>
+            <li class="active"><a href="#">Training Mode</a></li>
+            <li><a href="#">Autonomous Mode</a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right m-5">
+            <li>
+              <span>Status</span>
+              <button class="btn btn-danger navbar-btn m-3">
+                Not Connected
+              </button>
+              <!-- Based on connection status change the color of the button. And contents - when connected: car's IP. -->
+            </li>
           </ul>
         </div>
-        <div class="monitor">
-          <div class="feed">
-            <div class="camera-feed">
-              A window like google meet to stream camera data.
-            </div>
-            <div class="collision-avoidance-feed">
-              <p>Change collision threshold value: ........................</p>
-              <p>Collision at: XXcm</p>
+      </nav>
+      <div class="container page-header" style="margin-top: 0px">
+        <h1>Training Mode</h1>
+        <span>Refer comments in code at here</span>
+        <!-- Later with a i button and modal, hide the below text. Or any other way that minimizes the design. -->
+        <!-- <p class="text-muted">
+          In this mode, car is set in training mode. For purpose of training - all
+          the navigation controls, camera feed and ultrasonic feed are record for
+          training.
+        </p>
+        <p class="text-muted" style="margin-bottom: 0px">
+          The user will be like a guide in issuing proper controls based on the
+          surrounding environments. Note that, the quality of training data has
+          direct impact on training. i.e., to say - if had bad training, then
+          performs worst, vice versa if good training.
+        </p> -->
+      </div>
+    </header>
+    <main>
+      <div class="container">
+        <div class="panel panel-default">
+          <div class="panel-heading"><b>Tweakable Features</b></div>
+          <div class="panel-body">
+            <form class="form-inline" action="" method="">
+              <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-12">
+                  <div class="checkbox">
+                    <label><input type="checkbox" /> Camera Streaming</label>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-12">
+                  <div class="checkbox">
+                    <label><input type="checkbox" /> Collision Avoidance</label>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-12">
+                  <div class="checkbox">
+                    <label><input type="checkbox" /> Navigation Controls</label>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-12">
+                  <div class="checkbox">
+                    <label><input type="checkbox" /> Log messages </label>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="monitor row">
+          <div class="panel-group col-sm-6">
+            <div class="camera-feed panel panel-default">
+              <div class="panel-heading"><b>Feed</b></div>
+              <div class="panel-body">
+                <!-- A window like google meet to stream camera data. -->
+                <p>Camera Feed</p>
+                <img
+                  src="https://dummyimage.com/320x240/000/fff.jpg&text=camfeed"
+                  class="img-thumbnail"
+                  alt="camera feed"
+                />
+                <div class="collision-avoidance-feed">
+                  <form class="form-inline" action="" method="">
+                    <div class="form-group">
+                      <label for="collision_thresh"
+                        >Adjust Collision threshold value</label
+                      >
+                      <span></span>
+                      <input
+                        type="range"
+                        min="10"
+                        max="400"
+                        id="collision_thresh"
+                      />
+                    </div>
+                  </form>
+                  <p>
+                    Collision detected at:
+                    <span id="collision-distance">50</span>cm
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="controls">
-            <div class="recording">
-                <span>Recording</span>
-                <button>Start/Stop Recording</button>
-                <button>Pause/Resume recording</button>
+          <div class="navigation col-sm-6">
+            <div class="directions col-sm-4">
+              <div class="panel panel-default">
+                <div class="panel-heading"><b>Directions</b></div>
+                <div class="panel-body">
+                  <table>
+                    <tr>
+                      <td></td>
+                      <td>
+                        <button class="btn btn-block">
+                          <i class="bi bi-arrow-up"></i>
+                        </button>
+                      </td>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <button class="btn btn-block">
+                          <i class="bi bi-arrow-left"></i>
+                        </button>
+                      </td>
+                      <td></td>
+                      <td>
+                        <button class="btn btn-block">
+                          <i class="bi bi-arrow-right"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td>
+                        <button class="btn btn-block">
+                          <i class="bi bi-arrow-down"></i>
+                        </button>
+                      </td>
+                      <td></td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
             </div>
-            <div class="navigation">
-              -- also provide feature of controlling via navigation keys. And
-              even change the design of controls.
-              <ul>
-                <li><button>Up</button></li>
-                <li><button>Left</button></li>
-                <li><button>Right</button></li>
-                <li><button>Down</button></li>
-              </ul>
-              A slider at her to adjust the speed. A text box to display the
-              current speed.
+            <div class="speed-control col-sm-4">
+              <div class="panel-group">
+                <div class="panel panel-default">
+                  <div class="panel-heading"><b>Other controls</b></div>
+                  <div class="panel-body">
+                    <label for="speed">Speed: </label>
+                    <span style="color: blue; padding-left: 5px"
+                      ><b>50</b></span
+                    >
+                    <div class="row"></div>
+                    <input
+                      type="range"
+                      id="speed"
+                      class="custom-range"
+                      min="100"
+                      max="255"
+                    />
+                    <label for="light">Light: </label>
+                    <span style="color: blue; padding-left: 5px"
+                      ><b>50</b></span
+                    >
+                    <input
+                      type="range"
+                      id="light"
+                      class="custom-range"
+                      min="100"
+                      max="255"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="speed-control col-sm-4">
+              <div class="panel-group">
+                <div class="panel panel-default">
+                  <div class="panel-heading"><b>Recording</b></div>
+                  <div class="panel-body">
+                    <button type="button" class="btn btn-outline  btn-lg btn-rounded" style="border-radius: 50%;" data-toggle="tooltip" title="Start recording">
+                      <i class="bi bi-play-fill"></i>
+                      <!-- <i class="bi bi-stop-fill"></i></i> -->
+                    
+                    </button>
+                    <button type="button" class="btn btn-outline  btn-lg btn-rounded" style="border-radius: 50%;" data-toggle="tooltip" title="Start recording">
+                    <i class="bi bi-pause-fill"></i>
+                    <!-- <i class="bi bi-play-fill"></i> -->
+                    </button>
+                    <p style="margin-top: 10px; margin-bottom: none;">Time: <span>2m45s</span></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="log-messages col-sm-12">
+              <div class="panel panel-default ">
+                <div class="panel-heading"><b>Logs</b></div>
+                <div class="panel-body">Use lists of Bootstrap. Design: like that YouTube + Console log messages + timestamps.</div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </section>
-    <footer>Contributions Provide github link.</footer>
+    </main>
+    <footer class="footer navbar-fixed-bottom text-muted">
+      <div class="container">
+        <hr/>
+        <span class="text-body-secondary">
+          Contributions Provide github link.
+        </span>
+      </div>
+    </footer>
   </body>
 </html>
