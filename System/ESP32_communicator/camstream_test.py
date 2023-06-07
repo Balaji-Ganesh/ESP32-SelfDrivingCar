@@ -66,4 +66,9 @@ if __name__ == '__main__':
 Challenge:
     - Getting feed from ESP32 to Python
     - Decoding the image
+
+
+Another person looking for answer for same question:
+https://reverseengineering.stackexchange.com/questions/26224/decoding-messages-sent-received-by-python-websocket-client
+https://kite.trade/forum/discussion/1481/possibly-receiving-encrypted-websocket-binary-data-how-to-decrypt
 """
