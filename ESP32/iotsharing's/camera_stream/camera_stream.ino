@@ -170,3 +170,5 @@ void loop() {
     liveCam(cam_num);
   }
 }
+
+// src: http://www.iotsharing.com/2020/03/demo-48-using-websocket-for-camera-live.html
