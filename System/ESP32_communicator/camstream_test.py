@@ -9,73 +9,48 @@ from io import BytesIO
 # Intial Configurations
 ESP32_URL = '192.168.4.1'
 
-## Presets
+# Presets
 # choose the appropriate size - note that , this choice MUST match with ESP32 too.
-IMG_X, IMG_Y = 320, 240 # VGA: 640x480, QVGA: 320x240
-
-def decode_msg(msg):
-    print("RECEIVED IMAGE")
-    # print(msg)
-    """ Decoding the image received """
-    # A place holder to fill the binary image
-    
-    img_array = np.zeros(IMG_X, IMG_Y)  # !!! This size MUST match with ESP32 cam stream size.
-    x, y, count = 0, 0, 0
-
-    # Traverse the captured data one byte at a time and populate the image array
-    for byte in bytearray(msg):
-        y = count // IMG_X
-        x = count % IMG_X
-        img_array[y,x] = byte
-        count += 1
-
-    # display the captured image
-    print("START")
-    plt.figure('Capture Image 1')
-    plt.imshow(img_array)
-    plt.set_cmap('gray')
-    plt.show(block=False)
-    print("END")
-
+IMG_X, IMG_Y = 320, 240  # VGA: 640x480, QVGA: 320x240
 # Helpers
-count=0
-def on_message(ws, msg):        # will be called, whenever the ESP32 sends feed on the registered namespace
-    # print("img received")
-    # img = base64.b64decode(msg)
-    img = base64.decodebytes(msg)
-    print("img decoded")
-    print(img)
-    # imgd=np.frombuffer(img, dtype=np.uint8, count=IMG_X*IMG_Y).reshape(IMG_Y, IMG_X)
-    # print("hello")
-    # img_final = Image.fromarray(imgd)
-    # im = Image.open(BytesIO(base64.b64decode(img)))
-    # im.save('test'+count+'.jpeg', 'JPEG')
-    # count+=1
-    # print(count)
-    # plt.figure('Capture Image 1')
-    # plt.imshow(im)
-    # plt.set_cmap('gray')
-    # plt.show(block=False)
-    # print("End")
-    # print(img.size)
-    # with open('im_g_'+str(count)+'.jpeg', 'wb') as file:
-    #     file.write(img)
-    #     count+=1
-    """
-    Conclusion: Tried all the above methods -- but none worked
-    """
 
-    
+count = 0
+
+
+def base64_to_image(string):
+    print("Received String: ")#, string, end="\n\n\n")
+    # Decode the base64 data to bytes
+    image_bytes = base64.decodebytes(base64_data)
+    print("deocded")
+    # Convert the bytes to numpy array
+    image_array = np.frombuffer(image_bytes, dtype=np.uint8)
+    print("cvted to np array")
+    # Decode the numpy array as an image using OpenCV
+    image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+    print("deocded with cv2")
+    cv2.imwrite("img_"+str(count)+'.jpeg', image)
+    count += 1
+    print("image written")
+    return image
+
+
+# will be called, whenever the ESP32 sends feed on the registered namespace
+def on_message(ws, msg):
+    cv2.imshow("Feed", base64_to_image(msg))
+    cv2.waitKey(1)
+
 
 def on_open(ws, msg):
     print("System connected.")  # This will be sent to ESP32
 
-def on_close(ws, msg):          # this will be called, when the connection closes.
+
+# this will be called, when the connection closes.
+def on_close(ws, msg):
     print("[INFO] Websockets connection closed successfully.")
 
 
 if __name__ == '__main__':
-    
+
     # If ws:// doesn't work, try using wss://
     ws_camera_url = 'ws://'+ESP32_URL+'/Camera'
 
