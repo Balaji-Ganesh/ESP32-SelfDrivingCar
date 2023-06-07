@@ -40,30 +40,14 @@ def decode_msg(msg):
 # Helpers
 count=0
 def on_message(ws, msg):        # will be called, whenever the ESP32 sends feed on the registered namespace
-    # print("img received")
-    # img = base64.b64decode(msg)
-    img = base64.decodebytes(msg)
-    print("img decoded")
-    print(img)
-    # imgd=np.frombuffer(img, dtype=np.uint8, count=IMG_X*IMG_Y).reshape(IMG_Y, IMG_X)
-    # print("hello")
-    # img_final = Image.fromarray(imgd)
-    # im = Image.open(BytesIO(base64.b64decode(img)))
-    # im.save('test'+count+'.jpeg', 'JPEG')
-    # count+=1
-    # print(count)
-    # plt.figure('Capture Image 1')
-    # plt.imshow(im)
-    # plt.set_cmap('gray')
-    # plt.show(block=False)
-    # print("End")
-    # print(img.size)
-    # with open('im_g_'+str(count)+'.jpeg', 'wb') as file:
-    #     file.write(img)
-    #     count+=1
-    """
-    Conclusion: Tried all the above methods -- but none worked
-    """
+    print("on msg called")
+    binAnswer = ws.recv()
+    # print(binAnswer)
+    # print (websocket.ABNF.OPCODE_MAP[binAnswer.opcode])
+ 
+    # for byte in bytearray(binAnswer.data):
+    #     print( byte, "  ")
+    print("on msg exited")
 
     
 
@@ -91,4 +75,9 @@ if __name__ == '__main__':
 Challenge:
     - Getting feed from ESP32 to Python
     - Decoding the image
+
+
+Another person looking for answer for same question:
+https://reverseengineering.stackexchange.com/questions/26224/decoding-messages-sent-received-by-python-websocket-client
+https://kite.trade/forum/discussion/1481/possibly-receiving-encrypted-websocket-binary-data-how-to-decrypt
 """
