@@ -42,5 +42,11 @@ from docs: https://websockets.readthedocs.io/en/2.4/index.html?highlight=recv#we
     - check what you are getting -->>>>>>>>>>>>> Getting <class 'bytes'> <<< means binary data.
     Now need to find the way to decode.
 
+By GRACE... finally now working.
+Possible from:
+ - https://youtu.be/92UBFhPJQJ8?t=689 <<-- for decoding the image in python
+ - http://www.iotsharing.com/2020/03/demo-48-using-websocket-for-camera-live.html <<-- for setting up streaming at ESP32.
 
+ Now only thing pending is -- to establish communication from system to ESP32.
+    
 """
