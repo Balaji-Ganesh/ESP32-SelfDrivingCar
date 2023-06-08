@@ -5,52 +5,47 @@
 WiFiServer server(80);
 WebSocketsServer webSocketsServer(82);
 
-const char *ssid = "********";
-const char *password = "********";
+const char *ssid = "KMIT-Colleage";
+const char *password = "A1B2C3D4E5";
 
-void handleReceivedMessage(String message)
+void handleReceivedMessage(String json)
 {
+    StaticJsonDocument doc(96);                              // Memory pool
+    DeserializationError error = deserializeJson(doc, json); // deserialization
 
-    StaticJsonBuffer<500> JSONBuffer;                     // Memory pool
-    JsonObject &parsed = JSONBuffer.parseObject(message); // Parse message
-
-    if (!parsed.success())
-    { // Check for errors in parsing
-
-        Serial.println("Parsing failed");
+    if (error)
+    {
+        Serial.print(F("deserializeJson() failed with code "));
+        Serial.println(error.c_str());
         return;
     }
 
-    const char *sensorType = parsed["sensor"];           // Get sensor type value
-    const char *sensorIdentifier = parsed["identifier"]; // Get sensor type value
-    const char *timestamp = parsed["timestamp"];         // Get timestamp
-    int value = parsed["value"];                         // Get value of sensor measurement
+    // Get value of sensor measurement
+    const char *speed = doc['s'];
+    const char *direction = doc['d'];
+    int interval = doc['i'];
 
     Serial.println();
     Serial.println("----- NEW DATA FROM CLIENT ----");
 
-    Serial.print("Sensor type: ");
-    Serial.println(sensorType);
+    Serial.print("Speed");
+    Serial.println(speed);
 
-    Serial.print("Sensor identifier: ");
-    Serial.println(sensorIdentifier);
+    Serial.print("Direction ");
+    Serial.println(direction);
 
-    Serial.print("Timestamp: ");
-    Serial.println(timestamp);
-
-    Serial.print("Sensor value: ");
-    Serial.println(value);
+    Serial.print("Interval");
+    Serial.println(interval);
 
     Serial.println("------------------------------");
 }
 
 void setup()
 {
-
     Serial.begin(115200);
-
     delay(2000);
 
+    // Setup WiFi connection
     WiFi.begin(ssid, password);
 
     while (WiFi.status() != WL_CONNECTED)
@@ -70,32 +65,25 @@ void loop()
 {
 
     WiFiClient client = server.available();
-
     if (client.connected() && webSocketsServer.handshake(client))
     {
-
         String data;
-
         while (client.connected())
         {
-
             data = webSocketsServer.getData();
-
             if (data.length() > 0)
             {
                 handleReceivedMessage(data);
                 webSocketsServer.sendData(data);
             }
-
             delay(10); // Delay needed for receiving the data correctly
         }
-
         Serial.println("The client disconnected");
         delay(100);
     }
-
     delay(100);
 }
 
 // src: https://techtutorialsx.com/2017/11/05/esp32-arduino-websocket-server-receiving-and-parsing-json-content/
+//   NOTE: some upgrades need to be done to the code. Refer: https://arduinojson.org/v6/doc/upgrade/
 // Try just sending and parsing a string -- in a formatted manner.
