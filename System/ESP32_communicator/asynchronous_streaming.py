@@ -7,16 +7,25 @@ import cv2
 
 async def listen():
     url = "ws://172.168.1.132:81"
+    data = {
+  "s": 256,
+  "d": "U", # 0: UP, 1: Down, 2:LEFT, 3: Right -- working even with the string. But going to adopt the integer format.
+  "i": 40
+}
 
     async with websockets.connect(url) as ws:
         while True:
             msg = await ws.recv()
             # print("Received message", msg)
             npimg = np.array(bytearray(msg), dtype=np.uint8) # even try with msg.data
-            print(npimg)
+            # print(npimg)
             img = cv2.imdecode(npimg, -1)
             cv2.imshow("img", img)
             cv2.waitKey(1)
+
+            # send data to the ESP32
+            await ws.send(str(data))
+
             # decoded = base64.b64decode(msg, validate=False)
             # print("decoded msg: ", decoded)
 
@@ -49,4 +58,8 @@ Possible from:
 
  Now only thing pending is -- to establish communication from system to ESP32.
     
-"""
+// sending data from System to ESP32.
+    https://forum.arduino.cc/t/websocketserver-parsing-and-using-payload/631151 <<<<<<<<<------- at arduino side.
+    https://websockets.readthedocs.io/en/stable/reference/asyncio/server.html#websockets.server.WebSocketServerProtocol.send <<<<<<---------- at system side
+ 
+ """

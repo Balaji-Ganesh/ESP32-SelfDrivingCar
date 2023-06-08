@@ -1,32 +1,32 @@
 #include "esp_camera.h"
 #include <WiFi.h>
 #include <WebSocketsServer.h>
+#include <ArduinoJson.h>
 
-#define PWDN_GPIO_NUM     32
-#define RESET_GPIO_NUM    -1
-#define XCLK_GPIO_NUM      0
-#define SIOD_GPIO_NUM     26
-#define SIOC_GPIO_NUM     27
+#define PWDN_GPIO_NUM 32
+#define RESET_GPIO_NUM -1
+#define XCLK_GPIO_NUM 0
+#define SIOD_GPIO_NUM 26
+#define SIOC_GPIO_NUM 27
 
-#define Y9_GPIO_NUM       35
-#define Y8_GPIO_NUM       34
-#define Y7_GPIO_NUM       39
-#define Y6_GPIO_NUM       36
-#define Y5_GPIO_NUM       21
-#define Y4_GPIO_NUM       19
-#define Y3_GPIO_NUM       18
-#define Y2_GPIO_NUM        5
-#define VSYNC_GPIO_NUM    25
-#define HREF_GPIO_NUM     23
-#define PCLK_GPIO_NUM     22
-
+#define Y9_GPIO_NUM 35
+#define Y8_GPIO_NUM 34
+#define Y7_GPIO_NUM 39
+#define Y6_GPIO_NUM 36
+#define Y5_GPIO_NUM 21
+#define Y4_GPIO_NUM 19
+#define Y3_GPIO_NUM 18
+#define Y2_GPIO_NUM 5
+#define VSYNC_GPIO_NUM 25
+#define HREF_GPIO_NUM 23
+#define PCLK_GPIO_NUM 22
 
 WebSocketsServer webSocket = WebSocketsServer(81);
 WiFiServer server(80);
 uint8_t cam_num;
 bool connected = false;
 
-String index_html =   "<html>\n \
+String index_html = "<html>\n \
 <head>\n \
 <title> WebSockets Client</title>\n \
 <script src='http://code.jquery.com/jquery-1.9.1.min.js'></script>\n \
@@ -67,7 +67,8 @@ showServerResponse('The connection has been closed.');\n \
 });\n \
 </script>";
 
-void configCamera(){
+void configCamera()
+{
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer = LEDC_TIMER_0;
@@ -95,52 +96,101 @@ void configCamera(){
   config.fb_count = 1;
 
   esp_err_t err = esp_camera_init(&config);
-  if (err != ESP_OK) {
+  if (err != ESP_OK)
+  {
     Serial.printf("Camera init failed with error 0x%x", err);
     return;
   }
 }
 
-void liveCam(uint8_t num){
-  //capture a frame
-  camera_fb_t * fb = esp_camera_fb_get();
-  if (!fb) {
-      Serial.println("Frame buffer could not be acquired");
-      return;
+void liveCam(uint8_t num)
+{
+  // capture a frame
+  camera_fb_t *fb = esp_camera_fb_get();
+  if (!fb)
+  {
+    Serial.println("Frame buffer could not be acquired");
+    return;
   }
-  //replace this with your own function
+  // replace this with your own function
   webSocket.sendBIN(num, fb->buf, fb->len);
 
-  //return the frame buffer back to be reused
+  // return the frame buffer back to be reused
   esp_camera_fb_return(fb);
 }
 
-void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
+void handleReceivedMessage(char * json)
+{
+  StaticJsonDocument<96> doc;                              // Memory pool
+  DeserializationError error = deserializeJson(doc, json); // deserialization
 
-    switch(type) {
-        case WStype_DISCONNECTED:
-            Serial.printf("[%u] Disconnected!\n", num);
-            break;
-        case WStype_CONNECTED:
-            cam_num = num;
-            connected = true;
-            break;
-        case WStype_TEXT:
-        case WStype_BIN:
-        case WStype_ERROR:      
-        case WStype_FRAGMENT_TEXT_START:
-        case WStype_FRAGMENT_BIN_START:
-        case WStype_FRAGMENT:
-        case WStype_FRAGMENT_FIN:
-            break;
-    }
+  if (error)
+  {
+    Serial.print(F("deserializeJson() failed with code "));
+    Serial.println(error.c_str());
+    return;
+  }
+
+  // Get value of sensor measurement
+  long speed = doc["s"];     
+  String direction = doc["d"]; // 0: UP, 1: Down, 2:LEFT, 3: Right
+  long interval = doc["i"];
+
+  Serial.println();
+  Serial.println("----- NEW DATA FROM CLIENT ----");
+
+  Serial.print("Speed: ");
+  Serial.println(speed);
+
+  Serial.print("Direction: ");
+  Serial.println(direction);
+
+  Serial.print("Interval: ");
+  Serial.println(interval);
+
+  Serial.println("------------------------------");
 }
 
-void setup() {
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
+{
+
+  switch (type)
+  {
+  case WStype_DISCONNECTED:
+    Serial.printf("[%u] Disconnected!\n", num);
+    break;
+  case WStype_CONNECTED:
+    cam_num = num;
+    connected = true;
+    Serial.printf("[%u] Connected!\n", num);
+    break;
+  // get the message and echo back
+  case WStype_TEXT:
+    Serial.printf("[%u] Received data: %s\n", num, payload);
+    // char *buffer[40] = (char*)payload
+    // snprintf(buffer, "%s", payload);
+    // String data = (char *)payload;
+    // Serial.printf("String in buffer: %s\n", buffer);
+    // webSocket.sendTXT(num, payload);// ------- sending back..?? client may get confused with camstream data..
+    handleReceivedMessage((char*)payload);
+    break;
+  case WStype_BIN:
+  case WStype_ERROR:
+  case WStype_FRAGMENT_TEXT_START:
+  case WStype_FRAGMENT_BIN_START:
+  case WStype_FRAGMENT:
+  case WStype_FRAGMENT_FIN:
+    break;
+  }
+}
+
+void setup()
+{
   Serial.begin(115200);
-  WiFi.begin("Galaxy A124E66", "vieh0453");
+  WiFi.begin("KMIT-Colleage", "A1B2C3D4E5");
   Serial.println("");
-  while (WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED)
+  {
     delay(500);
     Serial.print(".");
   }
@@ -153,22 +203,29 @@ void setup() {
   webSocket.onEvent(webSocketEvent);
   configCamera();
 }
-    
-void http_resp(){
+
+void http_resp()
+{
   WiFiClient client = server.available();
-  if (client.connected() && client.available()) {                   
-    client.flush();          
+  if (client.connected() && client.available())
+  {
+    client.flush();
     client.print(index_html);
     client.stop();
   }
 }
 
-void loop() {
+void loop()
+{
   http_resp();
   webSocket.loop();
-  if(connected == true){
+  if (connected == true)
+  {
     liveCam(cam_num);
   }
 }
 
-// src: http://www.iotsharing.com/2020/03/demo-48-using-websocket-for-camera-live.html
+// src: for camera streaming http://www.iotsharing.com/2020/03/demo-48-using-websocket-for-camera-live.html
+//      for receiving data from the client: https://forum.arduino.cc/t/websocketserver-parsing-and-using-payload/631151
+//            - idea of parsing the received data using JSON- https://techtutorialsx.com/2017/11/05/esp32-arduino-websocket-server-receiving-and-parsing-json-content/
+// -- a suggestion: not to use strings. instead use integers.
