@@ -1,17 +1,12 @@
+"""This script connects to the ESP32 server via websockets. Gets the camera feed and displays in a window"""
 import websockets
 import asyncio
-import base64
-import urllib.request
 import numpy as np
 import cv2
 
+url = "ws://172.168.1.132:81"
+
 async def listen():
-    url = "ws://172.168.1.132:81"
-    data = {
-  "s": 256,
-  "d": "U", # 0: UP, 1: Down, 2:LEFT, 3: Right -- working even with the string. But going to adopt the integer format.
-  "i": 40
-}
 
     async with websockets.connect(url) as ws:
         while True:
@@ -21,18 +16,10 @@ async def listen():
             # print(npimg)
             img = cv2.imdecode(npimg, -1)
             cv2.imshow("img", img)
-            cv2.waitKey(1)
+            if cv2.waitKey(1) == 27:
+                print('EXITING')
+                break
 
-            # send data to the ESP32
-            await ws.send(str(data))
-
-            # decoded = base64.b64decode(msg, validate=False)
-            # print("decoded msg: ", decoded)
-
-            # response = urllib.request.urlopen(msg)
-            # print(response)
-            # # print(type(msg))  # getting as 'byte' type -- indicates "binary data"
-            # print(base64.b32decode(msg))
 
 asyncio.get_event_loop().run_until_complete(listen())
 
