@@ -1,0 +1,35 @@
+{% extends 'base.html' %} 
+
+{% block title %} Welcome - Self-driving car {%endblock %} 
+
+{% block page_heading %}
+<div class="jumbotron-text-center">
+  <div class="container">
+    <h1 class="jumbotron-heading">Self-Driving car</h1>
+    <p class="lead text-muted">An undergrad major project</p>
+    <hr />
+  </div>
+</div>
+{% endblock %}
+
+{% block main %}
+<div class="container">
+  <div class="run-modes">
+    <span class="short-info">Please choose an option to run.</span>
+
+    <ul class="list-unstyled">
+      <li>
+        <button class="btn" style="margin: 5px 0px">
+          Manual Survelliance mode
+        </button>
+      </li>
+      <li>
+        <button class="btn" style="margin: 5px 0px">Training Mode</button>
+      </li>
+      <li class="p-5 m-5">
+        <button class="btn" style="margin: 5px 0px">Autonomous Mode</button>
+      </li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
