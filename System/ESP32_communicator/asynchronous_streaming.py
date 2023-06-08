@@ -6,7 +6,7 @@ import numpy as np
 import cv2
 
 async def listen():
-    url = "ws://192.168.81.165:81"
+    url = "ws://172.168.1.132:81"
 
     async with websockets.connect(url) as ws:
         while True:
