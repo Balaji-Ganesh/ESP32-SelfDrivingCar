@@ -19,15 +19,19 @@
 
     <ul class="list-unstyled">
       <li>
-        <button class="btn" style="margin: 5px 0px">
+        <a href="{{ url_for('manual_mode') }}" class="btn btn-primary" style="margin: 5px 0px">
           Manual Survelliance mode
-        </button>
+        </a>
       </li>
       <li>
-        <button class="btn" style="margin: 5px 0px">Training Mode</button>
+        <a href="{{ url_for('training_mode') }}" class="btn btn-primary" style="margin: 5px 0px">
+          Training Mode
+        </a>
       </li>
       <li class="p-5 m-5">
-        <button class="btn" style="margin: 5px 0px">Autonomous Mode</button>
+        <a href="{{ url_for('autonomous_mode') }}" class="btn btn-primary" style="margin: 5px 0px">
+          Autonomous Mode
+        </a>
       </li>
     </ul>
   </div>
