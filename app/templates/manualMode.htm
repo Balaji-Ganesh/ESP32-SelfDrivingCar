@@ -58,7 +58,8 @@
           <!-- A window like google meet to stream camera data. -->
           <p>Camera Feed</p>
           <img
-            src="https://dummyimage.com/320x240/000/fff.jpg&text=camfeed"
+            src="{{ url_for('feed.camera_feed') }}"
+            <!-- When tried the actual url "/feed/camera" getting error. But with this, in browser getting the actual url in source. Wonder..!!  -->
             class="img-thumbnail"
             alt="camera feed"
           />
