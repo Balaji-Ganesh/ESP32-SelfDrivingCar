@@ -1,0 +1,316 @@
+{% extends 'base.html' %} 
+
+{% block title %} Autonomous Mode - Self-driving car {%endblock %} 
+
+{% block page_heading %}
+<div class="container page-header" style="margin-top: 0px">
+  <h1>Autonomous Mode</h1>
+  <!-- <p>
+    In this mode, car runs by itself based on the training given in
+    training mode. User can tweak between various features and parameters
+    to effectively understand the decisions taken by the car.
+  </p> -->
+</div>
+{% endblock %}
+
+
+{% block main %}
+<div class="container">
+  <div class="autonomous-level col-sm-3">
+    <div class="panel panel-default">
+      <div class="panel-heading">Autonomous Level</div>
+      <div class="panel-body">
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="auto-level"
+            id="semi-auto-mode"
+            checked
+          />
+          <label class="form-check-label" for="semi-auto-mode">
+            <abbr
+              title="Car makes all the decisions based on inputs provided, user has the control to decide navigations."
+            >
+              Semi-autonomous
+            </abbr>
+          </label>
+        </div>
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="radio"
+            name="auto-level"
+            id="fully-auto-mode"
+          />
+          <label class="form-check-label" for="fully-auto-mode">
+            <abbr
+              title="Car makes all the decisions. User will just be like a spectator. No manual intervention."
+            >
+              Fully autonomous
+            </abbr>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="features">
+    <div class="lane-detection col-sm-9">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <b>Features</b>
+        </div>
+        <div class="panel-body">
+          <div class="col-sm-4">
+            <!-- <b>Lane Detection Algorithm</b> -->
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                name="lane-detection-algo"
+                id="simple-lane-detection"
+                checked
+              />
+              <label class="form-check-label" for="simple-lane-detection">
+                <abbr title="to detect straight road lanes.">
+                  Simple Lane Detection
+                </abbr>
+              </label>
+            </div>
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                name="lane-detection-algo"
+                id="adv-lane-detection"
+              />
+              <label class="form-check-label" for="adv-lane-detection">
+                <abbr title="To detect curvy road lanes">
+                  Advanced Lane Detection
+                </abbr>
+              </label>
+            </div>
+            <!-- <div class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                name="lane-detection-algo"
+                id="holistic-algorithm"
+              />
+              <label class="form-check-label" for="holistic-algorithm">
+                <abbr title="in next version">
+                  Holistic algorithm
+                </abbr>
+              </label>
+              and even CNN based.
+            </div> -->
+          </div>
+          <div class="object-detection col-sm-4" style="margin-top: 0">
+            <!-- <span>Object Detection </span> -->
+            <div class="checkbox">
+              <label
+                ><input type="checkbox" />
+                <abbr
+                  title="detect traffic lights and take the decisions accordingly."
+                >
+                  Traffic light Detection
+                </abbr></label
+              >
+            </div>
+            <div class="checkbox">
+              <label
+                ><input type="checkbox" />
+                <abbr
+                  title="detect traffic signs and take the decisions accordingly."
+                >
+                  Traffic Signs Detection
+                </abbr></label
+              >
+            </div>
+            <div class="checkbox">
+              <!-- Due to space constraint, adding this in this category. Later change to its respective category -->
+              <label
+                ><input type="checkbox" />
+                <abbr title="Ultrasonic based collision avoidance">
+                  Collision avoidance
+                </abbr></label
+              >
+            </div>
+          </div>
+          <div class="display-mode col-sm-4">
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                name="display-mode"
+                id="final-output-only"
+                checked
+              />
+              <label class="form-check-label" for="final-output-only">
+                <abbr
+                  title="shows only final processed output of decision
+          made"
+                >
+                  Final output only
+                </abbr>
+              </label>
+            </div>
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                name="display-mode"
+                id="adv-lane-detection"
+              />
+              <label class="form-check-label" for="adv-lane-detection">
+                <abbr
+                  title="shows each key stage output in making decision. Useful for finding errors caused in decision-making."
+                >
+                  Detailed Output
+                </abbr>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="monitor row">
+    <div class="panel-group col-sm-6">
+      <div class="camera-feed panel panel-default">
+        <div class="panel-heading"><b>Feed</b></div>
+        <div class="panel-body">
+          <!-- A window like google meet to stream camera data. -->
+          <p>Camera Feed</p>
+          <img
+            src="https://dummyimage.com/320x240/000/fff.jpg&text=camfeed"
+            class="img-thumbnail"
+            alt="camera feed"
+          />
+          <div class="collision-avoidance-feed">
+            <form class="form-inline" action="" method="">
+              <div class="form-group">
+                <label for="collision_thresh"
+                  >Adjust Collision threshold value</label
+                >
+                <span></span>
+                <input
+                  type="range"
+                  min="10"
+                  max="400"
+                  id="collision_thresh"
+                />
+              </div>
+            </form>
+            <p>
+              Collision detected at:
+              <span id="collision-distance">50</span>cm
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="navigation col-sm-6">
+      <div class="directions col-sm-4">
+        <div class="panel panel-default">
+          <div class="panel-heading"><b>Directions</b></div>
+          <div class="panel-body">
+            <table>
+              <tr>
+                <td></td>
+                <td>
+                  <button class="btn btn-block">
+                    <i class="bi bi-arrow-up"></i>
+                  </button>
+                </td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>
+                  <button class="btn btn-block">
+                    <i class="bi bi-arrow-left"></i>
+                  </button>
+                </td>
+                <td></td>
+                <td>
+                  <button class="btn btn-block">
+                    <i class="bi bi-arrow-right"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td></td>
+                <td>
+                  <button class="btn btn-block">
+                    <i class="bi bi-arrow-down"></i>
+                  </button>
+                </td>
+                <td></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="speed-control col-sm-4">
+        <div class="panel-group">
+          <div class="panel panel-default">
+            <div class="panel-heading"><b>Other controls</b></div>
+            <div class="panel-body">
+              <label for="speed">Speed: </label>
+              <span style="color: blue; padding-left: 5px"
+                ><b>50</b></span
+              >
+              <div class="row"></div>
+              <input
+                type="range"
+                id="speed"
+                class="custom-range"
+                min="100"
+                max="255"
+              />
+              <label for="light">Light: </label>
+              <span style="color: blue; padding-left: 5px"
+                ><b>50</b></span
+              >
+              <input
+                type="range"
+                id="light"
+                class="custom-range"
+                min="100"
+                max="255"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="speed-control col-sm-4">
+        <div class="panel-group">
+          <div class="panel panel-default">
+            <div class="panel-heading"><b>Recording</b></div>
+            <div class="panel-body">
+              <button type="button" class="btn btn-outline  btn-lg btn-rounded" style="border-radius: 50%;" data-toggle="tooltip" title="Start recording">
+                <i class="bi bi-play-fill"></i>
+                <!-- <i class="bi bi-stop-fill"></i></i> -->
+              
+              </button>
+              <button type="button" class="btn btn-outline  btn-lg btn-rounded" style="border-radius: 50%;" data-toggle="tooltip" title="Start recording">
+              <i class="bi bi-pause-fill"></i>
+              <!-- <i class="bi bi-play-fill"></i> -->
+              </button>
+              <p style="margin-top: 10px; margin-bottom: none;">Time: <span>2m45s</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="log-messages col-sm-12">
+        <div class="panel panel-default ">
+          <div class="panel-heading"><b>Logs</b></div>
+          <div class="panel-body">Use lists of Bootstrap. Design: like that YouTube + Console log messages + timestamps.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+    

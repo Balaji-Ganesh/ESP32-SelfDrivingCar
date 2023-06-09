@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Latest compiled and minified CSS -->
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css')}}" >
+    <title>{% block title %}{% endblock %}</title>
+  </head>
+  <body>
+    <header>
+      <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <a class="navbar-brand" href="/">
+              <img src="{{ url_for('static', filename='/img/logo-white.png')}}" height="100%"/>
+            </a>
+          </div>
+          <ul class="nav navbar-nav">
+            <li 
+              {% if nav_bar == "home" %}
+                class="active"
+              {% endif %}>
+              <a href="/">Welcome</a></li>
+            <li {% if nav_bar == "manual_mode" %}
+                  class="active"
+                {% endif %}>
+             <a href="/manual_mode">Manual mode</a>
+            </li>
+            <li
+                {% if nav_bar == "training_mode" %}
+                  class="active"
+                {% endif %}>
+                <a href="/training_mode">Training Mode</a></li>
+            <li
+              {% if nav_bar == "auto_mode" %}
+                  class="active"
+                {% endif %}
+            ><a href="/autonomous_mode">Autonomous Mode</a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right m-5">
+            <li>
+              <span>Status</span>
+              <button class="btn btn-danger navbar-btn m-3">
+                Not Connected
+              </button>
+            </li>
+          </ul>
+        </div>
+      </nav>
+      {% block page_heading %} {% endblock %}
+    </header>
+    <main>{% block main %}{% endblock %}</main>
+    <footer class="footer text-muted navbar-fixed-bottom">
+      <div class="container">
+        <span class="text-body-secondary">
+          Contributions Provide github link.
+        </span>
+      </div>
+    </footer>
+  </body>
+</html>
