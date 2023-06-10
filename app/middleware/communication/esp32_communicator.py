@@ -6,7 +6,7 @@ exchanging stream of messages.
 import cv2
 import numpy as np
 # Necessary local imports
-from . import camera_ws, data_ws   # import websockets for communication
+from . import camera_ws as ws, data_ws   # import websockets for communication
 
 """ --------------- Utility functions ------------ """
 # Camera related..
@@ -18,16 +18,19 @@ async def get_cam_feed():
     Yields:
         cv2 image: Frames sent by ESP32
     """
-    async with camera_ws as ws:
+    try:
         while True:
             msg = await ws.recv()
             # print("Received message", msg)
             npimg = np.array(bytearray(msg), dtype=np.uint8) # even try with msg.data
             # print(npimg)
             img = cv2.imdecode(npimg, -1)
-            yield img   ## <<<<<<<<<<<<<<<<--- caller function gets the cam feed from here
-            cv2.imshow("[DEBUG] ESP32 cam feed", img)
+            cv2.imshow("img", img)
             if cv2.waitKey(1) == 27:
                 print('EXITING')
                 break
+    except Exception as e:
+        print(e)
+    finally:
+        await ws.ws_client.close()
 
