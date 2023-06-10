@@ -1,6 +1,6 @@
 from flask import render_template, Response
 from . import feed
-from ..processing import get_frames
+from ..middleware.communication import get_processed_frames
 
 ## Routes
 @feed.route('/ultra-sonic')
@@ -9,4 +9,4 @@ def ultrasonic_feed():
 
 @feed.route('/camera')
 def camera_feed():
-    return Response(get_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(get_processed_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')

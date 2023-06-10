@@ -7,5 +7,8 @@
 *NOTE*: These scripts is taken from the `experiments` branch of this repository, which are tested individually earlier.
         - to be even more specific - its from `System/ESP32_communicator/`
 
+**An additional task:**:
+- Transferring of the processed ouput (after processing) to the web-browser.
+
 **External References**
 - [Understand the notion of different programming techniques: Threading, Synchronous and Asynchronous ways](https://medium.com/velotio-perspectives/an-introduction-to-asynchronous-programming-in-python-af0189a88bbb)

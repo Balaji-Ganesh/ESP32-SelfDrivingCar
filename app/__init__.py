@@ -1,5 +1,6 @@
 from flask import Flask
 
+from .middleware.communication import get_cam_feed
 
 def create_app():
     app = Flask(__name__, template_folder='templates')
