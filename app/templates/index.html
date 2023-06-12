@@ -51,10 +51,9 @@
       var img_url = URL.createObjectURL(blob);
       document.getElementById("cam_img").src = img_url;
       
-      // console.log(imageId)
-      // var imageId = document.getElementById("cam_img");
-      // imageId.src = URL.createObjectURL(event.data);
-      console.log("image data placed")
+      console.log("image data placed .. Sending ack")
+      // send ack
+      socket.emit('ack', 'IMG_YES')
     })
 
 </script>

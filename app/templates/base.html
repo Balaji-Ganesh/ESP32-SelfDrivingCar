@@ -76,10 +76,13 @@
     const socket = io.connect('http://127.0.0.1:5000'); // url of the python server
     
     socket.on('connect', function(){
-      socket.emit('test', {
-        testdata: 'dummmy data'
+      socket.emit('ack', {
+        msg: 'CONN_ESTABLISHED'
       });
       console.log('Connected to server')
+      socket
+      if(confirm("Start streaming?") == true)
+        socket.emit('BEGIN_STREAM')
     });
 
     socket.on('disconnect', function(){
