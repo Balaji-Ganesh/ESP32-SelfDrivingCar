@@ -44,6 +44,7 @@
     // here just using setting up those events, which are specific to the page
     // FIXME: Currently this page doesn't need cam feed. Later move to that specific pages
     socket.on('img_data', function(data){
+      console.log("Image received")
       var arrayBufferView = new Uint8Array(data['image']);
       var blob = new Blob( [ arrayBufferView ], { type: "image/jpeg" } );
 
@@ -52,7 +53,7 @@
       
       // console.log(imageId)
       // var imageId = document.getElementById("cam_img");
-      imageId.src = URL.createObjectURL(event.data);
+      // imageId.src = URL.createObjectURL(event.data);
       console.log("image data placed")
     })
 
