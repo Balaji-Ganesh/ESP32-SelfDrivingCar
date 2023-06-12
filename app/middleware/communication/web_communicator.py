@@ -1,33 +1,33 @@
 """
 This file gets the processed output of the algorithm and sends it to the web-app.
 """
-from ..processor import read_feed
+from app import socketio # get the established instance
+# from ..processor import read_feed
+import base64
 import cv2
 
-def get_processed_frames():
-    """Gets the processed feed of ESP32camera to display in web-app.
-        - Feature Toggles can be used to adjust the features to be applied.
-        #FIXME: Add the functionality to turn ON and OFF the features to be applied as required.
-    Yields:
-        cv2 image: processed camera image.
-    """
-    while(True):
-        frame = read_feed()
-    
-        cv2.imshow("[DEBUG] Web-app", frame)
-        print("web communicator ready to send frames")
-        try:
-            ret, buffer = cv2.imencode('.jpg', cv2.flip(frame,1))
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-        except Exception as e:
-            print('[ERROR] An exception occured in sending frames')
-        
-        # the 'q' button is set as the
-        # quitting button you may use any
-        # desired button of your choice
-        # if cv2.waitKey(1) == 27:
-        #     break
-        # # Destroy all the windows
-        # cv2.destroyAllWindows()
+# Event handlers for socketio
+@socketio.on('connect')
+def handle_connect():
+    print("Client connected successfully")
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    print("Client disconnected successfully")
+
+@socketio.on('stream')
+def handle_stream(response):
+    print("client sent: "+str(response))
+    print("[[[[[[[[[[[[[[[[[[[[[[[[[[[STREAMING BEGINS]]]]]]]]]]]]]]]]]]]]]]]]]]]")
+    cap = cv2.VideoCapture(0)
+    while (cap.isOpened()):
+        ret, img = cap.read()
+        if ret:
+            img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
+            frame = cv2.imencode('.jpg', img)[1].tobytes()
+            frame = base64.encodebytes(frame).decode("utf-8")
+            socketio.emit('img_data', frame)
+            socketio.sleep(0)
+        else:
+            print("Can't stream ")
+            break

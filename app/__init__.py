@@ -15,4 +15,8 @@ def create_app():
     app.register_blueprint(main_blueprint, url_prefix='/')
     # app.register_blueprint(feed, url_prefix='/feed')
 
+    
     return socketio, app
+
+# Create the application..
+socketio, app = create_app()
