@@ -43,17 +43,10 @@
     // Connection is already setup with variable `socket` in `base.html`, which will be top of this in final rendering.
     // here just using setting up those events, which are specific to the page
     // FIXME: Currently this page doesn't need cam feed. Later move to that specific pages
-    socket.on('img_data', function(data){
+    socket.on('img_data', function(msg){
       console.log("Image received")
-      var arrayBufferView = new Uint8Array(data['image']);
-      var blob = new Blob( [ arrayBufferView ], { type: "image/jpeg" } );
-
-      var img_url = URL.createObjectURL(blob);
-      document.getElementById("cam_img").src = img_url;
-      
-      console.log("image data placed .. Sending ack")
-      // send ack
-      socket.emit('ack', 'IMG_YES')
+      img_element = document.getElementById("cam_img")
+      img_element.src="data:image/jpeg;base64,"+msg;
     })
 
 </script>
