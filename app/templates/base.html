@@ -71,21 +71,24 @@
   <!-- Socketio library and establishing connection with python flask server -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script> -->
-  {% block socketio_connection %}
+  
   <script type="text/javascript" charset="utf-8">
     const socket = io.connect('http://127.0.0.1:5000'); // url of the python server
     
     socket.on('connect', function(){
-      socket.emit('manual_mode', {
+      socket.emit('test', {
         testdata: 'dummmy data'
       });
       console.log('Connected to server')
     });
 
-    // socket.on('disconnect', function(){
-    //   socket.send('Disconnecting');
-    // })
+    socket.on('disconnect', function(){
+      console.log("Disconnecting with the server")
+      socket.send('Disconnecting');
+    })
+
 </script>
-  {% endblock %}
+{% block socketio_connection %}
+{% endblock %}
 
 </html>

@@ -35,5 +35,26 @@
       </li>
     </ul>
   </div>
+  <img src="" id="cam_img"/>
 </div>
+{% endblock %}
+{% block socketio_connection %}
+<script type="text/javascript" charset="utf-8">
+    // Connection is already setup with variable `socket` in `base.html`, which will be top of this in final rendering.
+    // here just using setting up those events, which are specific to the page
+    // FIXME: Currently this page doesn't need cam feed. Later move to that specific pages
+    socket.on('img_data', function(data){
+      var arrayBufferView = new Uint8Array(data['image']);
+      var blob = new Blob( [ arrayBufferView ], { type: "image/jpeg" } );
+
+      var img_url = URL.createObjectURL(blob);
+      document.getElementById("cam_img").src = img_url;
+      
+      // console.log(imageId)
+      // var imageId = document.getElementById("cam_img");
+      imageId.src = URL.createObjectURL(event.data);
+      console.log("image data placed")
+    })
+
+</script>
 {% endblock %}
