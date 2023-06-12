@@ -10,7 +10,7 @@ from . import camera_ws as ws, data_ws   # import websockets for communication
 
 """ --------------- Utility functions ------------ """
 # Camera related..
-async def get_cam_feed():
+async def get_cam_feed(sock):
     """This function with the established websocket, gets the cam feed form ESP32.
         
     Usage: Just call this function as like some generator in loop to get the feed.
@@ -25,6 +25,8 @@ async def get_cam_feed():
             npimg = np.array(bytearray(msg), dtype=np.uint8) # even try with msg.data
             # print(npimg)
             img = cv2.imdecode(npimg, -1)
+            # send the image to web-app
+            sock.emit('img_data', img)
             cv2.imshow("img", img)
             if cv2.waitKey(1) == 27:
                 print('EXITING')
