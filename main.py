@@ -1,90 +1,36 @@
 from app import create_app
 import cv2
 import time
+import base64
 socketio, app = create_app()
 
 # FIXME: later figure out the way to place this in some file like, `web` and `feed`
 
-
-def send_image():
-    with open('640x480.jpg', 'rb') as f:
-        image_data = f.read()
-    socketio.emit('img_data', {'image': image_data})
-
-
-is_img_recvd, is_conn_handshake_done, is_begin_stream = True, False, False
-
-
-@socketio.on('ack')
-def handle_acknowledge(response):
-    """When received ack from client - that image has received, then send the next frame"""
-    global is_img_recvd, is_conn_handshake_done, is_begin_stream
-    if response['msg'] == 'CONN_ESTABLISHED':
-        print("Connection Established")
-        is_conn_handshake_done = True
-    elif response['msg'] == 'BEGIN_STREAM':
-        print("Start stream, recvd ack")
-        is_begin_stream = True
-    elif response['msg'] == 'IMG_YES':
-        is_img_recvd = True
-        print("Recvd ack from client. Send next frame")
-    else:
-        print('Unknown response received. Got '+str(response))
-
-
-def stream_webcamera():
-    global is_img_recvd
-    # define a video capture object
-    vid = cv2.VideoCapture(0)
-
-    while True:
-        # Capture the video frame
-        # by frame
-        ret, frame = vid.read()
-
-        # Display the resulting frame
-        cv2.imshow('frame', frame)
-
-        # Now encode it to send over connection
-        ret, buffer = cv2.imencode('.jpg', cv2.flip(frame, 1))
-        frame = buffer.tobytes()
-        socketio.emit('img_data', {'image': frame})
-        print("Sent image. Waiting for ack.")
-        is_img_recvd = False
-        if cv2.waitKey(1) == 27:
-            break
-
-        time.sleep(0.5)
-    # After the loop release the cap object
-    vid.release()
-    # Destroy all the windows
-    cv2.destroyAllWindows()
-
-# Event handlers for connection events
-
-
 @socketio.on('connect')
 def handle_connect():
-    print("Client connected successfully")
-    # send image data..
-    if is_conn_handshake_done:
-        print("Handshake successful")
+    print("Client connected successfully")\
 
-@socketio.on('/stream')
-def handle_stream():
-    print("Waiting for ack - to begin stream")
-    if is_begin_stream == True:
-        print("Server about to send the image")
-        input("Enter some key to send image")
-        send_image()
-        if input("Enter some key to begin stream") == 'y':
-            stream_webcamera()
-        print("Server sent the image")
+@socketio.on('stream')
+def handle_stream(response):
+    print("client sent: "+str(response))
+    print("[[[[[[[[[[[[[[[[[[[[[[[[[[[STREAMING BEGINS]]]]]]]]]]]]]]]]]]]]]]]]]]]")
+    cap = cv2.VideoCapture(0)
+    while (cap.isOpened()):
+        ret, img = cap.read()
+        if ret:
+            img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
+            frame = cv2.imencode('.jpg', img)[1].tobytes()
+            frame = base64.encodebytes(frame).decode("utf-8")
+            socketio.emit('img_data', frame)
+            socketio.sleep(0)
+        else:
+            print("Can't stream ")
+            break
 
 
 @socketio.on('disconnect')
-def handle_connect():
-    print("Client connected successfully")
+def handle_disconnect():
+    print("Client disconnected successfully")
 
 # Handle specific events -- client uses `emit` for these
 
