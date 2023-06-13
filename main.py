@@ -1,23 +1,20 @@
-import cv2
-import base64
-from app import socketio, app
+from flask_socketio import SocketIO
+from app import create_app
+from app.middleware.communication import establish_communications
 
 # FIXME: later figure out the way to place this in some file like, `web` and `feed`
 # alternative to socketio.on_event('manual_mode', handler=handle_manual_mode, namespace='/')
 
-
-@socketio.on('manual_mode')
-def handle_manual_mode(data):
-    app.logger.info(data)
-    print("Received data: "+str(data))
-    # socketio.emit('acknowledgement', "You are connected")
-    socketio.send('test')
-
-# Event handlers for socketio
-# @socketio.on('connect')
-# def handle_connect():
-#     print("Client connected successfully")
-
-
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    # Establish communications..
+    print("[DEBUG] main: About to establish communications")
+    webapp = create_app()
+    socketio: SocketIO = SocketIO()
+    establish_communications(webapp, socketio)
+    print("[DEBUG] main: Communications established")
+    
+    from app.middleware.communication.web_communicator import *    # Register the event handlers
+
+    print("[DEBUG] main: Starting the application...")
+    socketio.run(webapp, debug=True)
+    print("[DEBUG] main: Thanks for utilizing the application.")

@@ -38,16 +38,4 @@
   <img src="" id="cam_img"/>
 </div>
 {% endblock %}
-{% block socketio_connection %}
-<script type="text/javascript" charset="utf-8">
-    // Connection is already setup with variable `socket` in `base.html`, which will be top of this in final rendering.
-    // here just using setting up those events, which are specific to the page
-    // FIXME: Currently this page doesn't need cam feed. Later move to that specific pages
-    socket.on('img_data', function(msg){
-      console.log("Image received")
-      img_element = document.getElementById("cam_img")
-      img_element.src="data:image/jpeg;base64,"+msg;
-    })
 
-</script>
-{% endblock %}

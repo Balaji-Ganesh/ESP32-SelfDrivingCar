@@ -82,15 +82,17 @@
         msg: 'CONN_ESTABLISHED'
       });
       console.log('Connected to server')
-      
-      // if(confirm("Start streaming?") == true)
-      console.log('streaming begins...')
-      socket.emit('stream', {msg: 'start streaming'})
     });
 
     socket.on('disconnect', function(){
       console.log("Disconnecting with the server")
-      socket.send('Disconnecting');
+      socket.emit('ack', {
+        msg: 'CONN_TERMINATED'
+      });
+    })
+
+    socket.on('json', (data)=>{
+      console.log('server replied: ', data)
     })
 
 </script>
