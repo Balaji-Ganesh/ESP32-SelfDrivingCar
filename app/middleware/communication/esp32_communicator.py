@@ -7,6 +7,8 @@ import cv2
 import numpy as np
 import websockets
 import logging
+import base64
+
 
 """ --------------- Utility functions ------------ """
 """***************************** Helper functions  *****************************"""
@@ -24,6 +26,7 @@ async def get_cam_feed(self):
         cv2 image: Frames sent by ESP32
     """
     logging.debug("esp32: Proceeding to begin stream from ESP32....")
+    from . import web_comm
     try:
         logging.debug("esp32: Stream begins from ESP32....")
         while True:
@@ -33,16 +36,21 @@ async def get_cam_feed(self):
             npimg = np.array(bytearray(msg), dtype=np.uint8)
             # print(npimg)
             img = cv2.imdecode(npimg, -1)
-            # send the image to web-app
-            self.sock.emit('img_data', img)
             cv2.imshow("img", img)
+            # send the image to web-app
+            # frame = cv2.imencode('.jpg', img)[1].tobytes()
+            # frame = base64.encodebytes(frame).decode("utf-8")
+            # web_comm.sock.emit('img_data', frame)
+            # web_comm.sock.sleep(0)
+
             if cv2.waitKey(1) == 27:
                 print('EXITING')
                 break
-    except websockets.exceptions:
-        logging.error(
-            "esp32: Receiving frames error. Connection might have broken, please try again. \nerror: ", e)
+    # except websockets.exceptions:
+    #     logging.error(
+    #         "esp32: Receiving frames error. Connection might have broken, please try again. \nerror: ", e)
     except Exception as e:
+        print("Exception type: ", type(e))
         logging.error("esp32: error: ", e)
     finally:
         await self.camera_ws.close()

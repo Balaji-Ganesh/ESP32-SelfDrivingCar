@@ -39,7 +39,7 @@ class ESP32Communication:
             str(self.camera_port)    # url of camera websockets
         # url of data transfer websockets
         self.data_txrx_url = "ws://"+self.esp32_ip+":"+str(self.data_port)
-        # FIXME: make the way of setting the IP and ports -  dynamically. Say by use of environment variables.
+        
         logging.debug('ESP32 communication setup done')
 
         logging.debug(
@@ -52,7 +52,7 @@ class ESP32Communication:
 
 class WebCommunication:
     # Import socketio event handlers
-    from .web_communicator import handle_connect, handle_disconnect, handle_ack, handle_stream
+    from .web_communicator import handle_connect, handle_disconnect, handle_ack, handle_stream, stream_cam
 
     def init_communication(self, socketio):
         self.sock: SocketIO = socketio

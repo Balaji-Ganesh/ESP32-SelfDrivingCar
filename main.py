@@ -10,7 +10,7 @@ if __name__ == '__main__':
     webapp = create_app()
     web_comm.init_communication(socketio)
     esp32_comm.init_communication(ip='192.168.0.165')
-    from app.middleware.communication.web_communicator import *  # register event handlers
+    # from app.middleware.communication.web_communicator import *  # register event handlers
     print("[DEBUG] main: Communications established")
 
     print("[DEBUG] main: Starting the application...")
