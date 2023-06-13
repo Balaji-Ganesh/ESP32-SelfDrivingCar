@@ -1,7 +1,10 @@
 from flask import Flask
-# from .middleware.communication
+from flask_socketio import SocketIO
+from .middleware.communication import esp32_comm, web_comm
+socketio = SocketIO()
 
 def create_app():
+    # App initialization..........
     app = Flask(__name__, template_folder='templates')
     app.config['SECRET_KEY'] = 'secret!'
 
@@ -9,14 +12,14 @@ def create_app():
     from .web import web as main_blueprint  # for displaying web-pages
     from .feed import feed                  # for handling camera and ultra-sonic feed
 
+    # Initialize socketio
+    socketio.init_app(app=app, cors_allowed_origins="*")
+    # , logger=True, engineio_logger=True)        # to run websockets for this flask app. A new server runs for this.
+
+    # Register blueprints..
     app.register_blueprint(main_blueprint, url_prefix='/')
     app.register_blueprint(feed, url_prefix='/feed')
-
-    # global socketio
-    # , logger=True, engineio_logger=True)        # to run websockets for this flask app. A new server runs for this.
-    # socketio = SocketIO(app, cors_allowed_origins="*")
-    # socketio.init_app(app, cors_allowed_origins="*")
-
+    
     return app
 
 # Get the event handlers
