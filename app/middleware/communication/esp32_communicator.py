@@ -17,7 +17,7 @@ import base64
 # Camera related..
 
 
-async def get_cam_feed(self):
+async def get_cam_feed():
     """This function with the established websocket, gets the cam feed form ESP32.
 
     Usage: Just call this function as like some generator in loop to get the feed.
@@ -26,18 +26,18 @@ async def get_cam_feed(self):
         cv2 image: Frames sent by ESP32
     """
     logging.debug("esp32: Proceeding to begin stream from ESP32....")
-    from . import web_comm
+    from . import web_comm, esp32_comm
     try:
         logging.debug("esp32: Stream begins from ESP32....")
         while True:
-            msg = await self.camera_ws.recv()
+            msg = await esp32_comm.cameraws.recv()
             logging.debug("esp32: Received frame from esp32")
             # even try with msg.data
             npimg = np.array(bytearray(msg), dtype=np.uint8)
             # print(npimg)
             img = cv2.imdecode(npimg, -1)
             cv2.imshow("img", img)
-            # send the image to web-app
+            # send the image to web-app          -- encoding, do as did for the webcam
             # frame = cv2.imencode('.jpg', img)[1].tobytes()
             # frame = base64.encodebytes(frame).decode("utf-8")
             # web_comm.sock.emit('img_data', frame)
@@ -53,4 +53,5 @@ async def get_cam_feed(self):
         print("Exception type: ", type(e))
         logging.error("esp32: error: ", e)
     finally:
-        await self.camera_ws.close()
+        # await esp32_comm.cameraws.close()
+        pass
