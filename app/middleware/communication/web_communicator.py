@@ -2,9 +2,10 @@
 This file gets the processed output of the algorithm and sends it to the web-app.
 """
 import asyncio
-from multiprocessing import Process
+from threading import Thread
 # Event handlers for socketio
-
+import cv2
+import base64
 
 def handle_connect(self, ):
     print("[DEBUG] web: Client connected successfully")
@@ -22,31 +23,58 @@ def handle_ack(self, data):
 
 def stream_cam(self):
     # from .esp32_communicator import get_cam_feed
-    from . import esp32_comm
-    asyncio.get_event_loop().run_until_complete(esp32_comm.get_cam_feed())
+    # from . import esp32_comm
+    # asyncio.get_event_loop().run_until_complete(esp32_comm.get_cam_feed())
+    # Stream from webcam
+    # -- test: First, could able to stream the webcam or not? w/ a separate process or thread.
+    # With threading (after monkey patching), this way working.
+    cap = cv2.VideoCapture(0)
+    while (cap.isOpened()):
+        ret, img = cap.read()
+        if ret:
+            cv2.imshow("img", img)
+            img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
+            frame = cv2.imencode('.jpg', img)[1].tobytes()
+            frame = base64.encodebytes(frame).decode("utf-8")
+            self.sock.emit('img_data', frame)
+            self.sock.sleep(0)
+            if cv2.waitKey(1) == 27:
+                break
+        else:
+            print("Can't stream ")
+            break
+    pass
 
 
 def handle_stream(self, response):
     # Get the camera streamer..
     print("[DEBUG] web: (stream event) client sent: "+str(response))
     print("[[[[[[[[[[[[[[[[[[[[[[[[[[[STREAMING BEGINS]]]]]]]]]]]]]]]]]]]]]]]]]]]")
+    
+    print("[DEBUG] web: Creating proceses to begin streaming")
+    from . import web_comm
+    camThread = Thread(target=web_comm.stream_cam)
+    print("[DEBUG] web: about to start spawned process for streaming")
+    camThread.start()
+    print("[DEBUG] web: Started spawned process for streaming")
+    camThread.join()
+
+    # A test -- whether could able to stream without creating separate process/thread or not.
+    # Test result: This way (w/o any process or thread) is working
     # cap = cv2.VideoCapture(0)
     # while (cap.isOpened()):
     #     ret, img = cap.read()
     #     if ret:
+    #         cv2.imshow("img", img)
     #         img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
     #         frame = cv2.imencode('.jpg', img)[1].tobytes()
     #         frame = base64.encodebytes(frame).decode("utf-8")
     #         self.sock.emit('img_data', frame)
     #         self.sock.sleep(0)
+    #         if cv2.waitKey(1) == 27:
+    #             break
     #     else:
     #         print("Can't stream ")
     #         break
-    print("[DEBUG] web: Creating proceses to begin streaming")
-    from . import web_comm
-    camProcess = Process(target=web_comm.stream_cam)
-    print("[DEBUG] web: about to start spawned process for streaming")
-    camProcess.start()
-    print("[DEBUG] web: Started spawned process for streaming")
-    camProcess.join()
+
     print("[DEBUG] web: Streaming ended")

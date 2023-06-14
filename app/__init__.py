@@ -1,3 +1,7 @@
+# Perform monkey patching.. to support asynchronous behaviour
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask
 from flask_socketio import SocketIO
 from .middleware.communication import esp32_comm, web_comm
@@ -13,7 +17,7 @@ def create_app():
     from .web import web as main_blueprint  # for displaying web-pages
     
     # Initialize socketio
-    socketio.init_app(app=app, cors_allowed_origins="*")
+    socketio.init_app(app=app, cors_allowed_origins="*", async_mode="eventlet")
     # , logger=True, engineio_logger=True)        # to run websockets for this flask app. A new server runs for this.
 
     # Register blueprints..

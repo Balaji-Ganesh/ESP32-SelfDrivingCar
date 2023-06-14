@@ -74,28 +74,7 @@
   <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script> -->
   
-  <script type="text/javascript" charset="utf-8">
-    const socket = io.connect('http://127.0.0.1:5000'); // url of the python server
-    
-    socket.on('connect', function(){
-      socket.emit('ack', {
-        msg: 'CONN_ESTABLISHED'
-      });
-      console.log('Connected to server')
-    });
 
-    socket.on('disconnect', function(){
-      console.log("Disconnecting with the server")
-      socket.emit('ack', {
-        msg: 'CONN_TERMINATED'
-      });
-    })
-
-    socket.on('json', (data)=>{
-      console.log('server replied: ', data)
-    })
-
-</script>
 {% block socketio_connection %}
 {% endblock %}
 
