@@ -2,7 +2,7 @@
 This file gets the processed output of the algorithm and sends it to the web-app.
 """
 import asyncio
-from threading import Thread
+from multiprocessing import Process
 # Event handlers for socketio
 import cv2
 import base64
@@ -53,11 +53,11 @@ def handle_stream(self, response):
     
     print("[DEBUG] web: Creating proceses to begin streaming")
     from . import web_comm
-    camThread = Thread(target=web_comm.stream_cam)
+    camProcess = Process(target=web_comm.stream_cam)
     print("[DEBUG] web: about to start spawned process for streaming")
-    camThread.start()
+    camProcess.start()
     print("[DEBUG] web: Started spawned process for streaming")
-    camThread.join()
+    camProcess.join()
 
     # A test -- whether could able to stream without creating separate process/thread or not.
     # Test result: This way (w/o any process or thread) is working
