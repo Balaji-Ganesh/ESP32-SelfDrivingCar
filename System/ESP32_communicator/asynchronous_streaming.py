@@ -21,7 +21,16 @@ async def listen():
                 break
 
 
-asyncio.get_event_loop().run_until_complete(listen())
+# asyncio.get_event_loop().run_until_complete(listen())
+if __name__ == '__main__':
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        loop.run_until_complete(listen())
+    except KeyboardInterrupt:
+        pass
+
+
 
 """
 src: https://youtu.be/tgtb9iucOts

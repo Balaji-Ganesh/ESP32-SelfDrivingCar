@@ -24,4 +24,12 @@ async def listen():
             # send navigation controls to the ESP32
             await ws.send(str(navigation_data))
 
-asyncio.get_event_loop().run_until_complete(listen())
+# asyncio.get_event_loop().run_until_complete(listen()) <<-- giving DeprecationWarning
+
+if __name__ == '__main__':
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        loop.run_until_complete(listen())
+    except KeyboardInterrupt:
+        pass
