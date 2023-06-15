@@ -2,3 +2,5 @@
 *.pyc
 env
 *.log
+# Skip the testing files.
+test*
