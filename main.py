@@ -1,4 +1,4 @@
-from app import create_app, socketio, esp32_comm, web_comm
+from web import create_app, socketio, esp32_comm, web_comm
 
 
 # FIXME: later figure out the way to place this in some file like, `web` and `feed`
