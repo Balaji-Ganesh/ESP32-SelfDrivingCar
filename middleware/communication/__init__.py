@@ -1,6 +1,6 @@
 # This file is from the branch `experiments` as `fastapi_as_api_in_class.py`
 import asyncio
-from fastapi import FastAPI, APIRouter
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 import cv2
 
 # Get the helpers..
@@ -23,12 +23,32 @@ class ESP32Manager:
         self.cam_task = None
         self.data_task = None
 
+        self.cam_ws = None
+        self.data_ws = None
+
         self.task = None
         self.router = APIRouter()
 
         @self.router.get("/")
         async def read_root():
             return {"Hello": "World"}
+        
+        @self.router.get("/connection/{function}")
+        async def camera_feed_handler(function: str):
+            if function == 'establish':
+                if self.cam_ws is None and self.data_ws is None:
+                    # asyncio.create_task(esp32._connection_establisher(self))
+                    await esp32._connection_establisher(self)
+                    return {"message": "Connection to ESP32 established."}
+                else:
+                    return {"message": "Connections already established."}
+            elif function == 'terminate':
+                if self.cam_ws is not None and self.data_ws is not None:
+                    # asyncio.create_task(esp32._connection_establisher(self))
+                    await esp32._connection_terminater(self)
+                    return {"message": "Connection to ESP32 terminated."}
+                else:
+                    return {"message": "Connections already terminated."}
         
         @self.router.get("/camera-feed/{function}")
         async def camera_feed_handler(function: str):
@@ -73,7 +93,27 @@ class ESP32Manager:
                 else:
                     return {"message": "No collision-data task is currently running."}
         
-       
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def send_personal_message(self, message: str, websocket: WebSocket):
+        await websocket.send_text(message)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
+manager = ConnectionManager()
+
 class WebManager:
     """Manages all the connections to the web-app.
     """
@@ -83,3 +123,16 @@ class WebManager:
         @self.router.get('/web')
         def sayhello():
             return 'Hello Web app'
+
+        @self.router.websocket("/web/text")
+        async def websocket_endpoint(websocket: WebSocket):
+            await manager.connect(websocket)
+
+            try:
+                while True:
+                    # data = await websocket.receive_text()
+                    await manager.send_personal_message("You wrote: Hello Rama..!!", websocket)
+                    # await manager.broadcast("Client #123 says: How are you Rama?")
+            except WebSocketDisconnect:
+                manager.disconnect(websocket)
+                await manager.broadcast("Client #123 left the chat")
