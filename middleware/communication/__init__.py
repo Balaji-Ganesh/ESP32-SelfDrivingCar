@@ -6,9 +6,11 @@ import cv2
 # Get the helpers..
 from . import esp32
 
+
 class ESP32Manager:
     """Manages all the communication related to the ESP32.
     """
+
     def __init__(self, esp32IP: str, cam_port: int = 81, data_port: int = 82):
         # set it to the assigned IP address to ESP32 when connected to WiFi.
         esp32_ip: str = esp32IP
@@ -32,29 +34,38 @@ class ESP32Manager:
         @self.router.get("/")
         async def read_root():
             return {"Hello": "World"}
-        
-        @self.router.get("/connection/{function}")
-        async def camera_feed_handler(function: str):
+
+        @self.router.get("/connection/{function:str}")
+        async def connections_handler(function: str):
             if function == 'establish':
                 if self.cam_ws is None and self.data_ws is None:
-                    # asyncio.create_task(esp32._connection_establisher(self))
-                    await esp32._connection_establisher(self)
-                    return {"message": "Connection to ESP32 established."}
+                    task = asyncio.create_task(
+                        esp32._connection_establisher(self))
+                    success = await task
+                    return {"message": "Connection to ESP32 established."} if success else {"message": "Failure in ESP32 connection establishment. Please check log."}
                 else:
                     return {"message": "Connections already established."}
             elif function == 'terminate':
                 if self.cam_ws is not None and self.data_ws is not None:
-                    # asyncio.create_task(esp32._connection_establisher(self))
-                    await esp32._connection_terminater(self)
-                    return {"message": "Connection to ESP32 terminated."}
+                    task = asyncio.create_task(
+                        esp32._connection_terminater(self))
+                    success = await task
+                    return {"message": "ES32 connections terminated successfully.."} if success else {"message": "Failure in termination of ESP32 connections. Please check log."}
                 else:
                     return {"message": "Connections already terminated."}
-        
-        @self.router.get("/camera-feed/{function}")
+            else:
+                return {'error': 'Invalid function invoked.'}
+
+        @self.router.get("/camera-feed/{function:str}")
         async def camera_feed_handler(function: str):
             if function == 'start':
+                # check connection status..
+                if self.cam_ws is None:
+                    return {'error': 'No connection established with ESP32. Please establish first.'}
+                # when connection already established..
                 if self.cam_task is None:
-                    self.cam_task = asyncio.create_task(esp32._camera_client(self))
+                    self.cam_task = asyncio.create_task(
+                        esp32._camera_client(self))
                     return {"message": "Camera task started."}
                 else:
                     return {"message": "Camera task is already running."}
@@ -66,15 +77,21 @@ class ESP32Manager:
                     except asyncio.CancelledError:
                         pass
                     self.cam_task = None
-                    #FIXME: The below one, is for testing purposes. Remove once done.
+                    # FIXME: The below one, is for testing purposes. Remove once done.
                     cv2.destroyAllWindows()
                     return {"message": "Camera task stopped."}
                 else:
                     return {"message": "No camera task is currently running."}
+            else:
+                return {'error': 'Invalid function invoked.'}
 
         @self.router.get("/collision-distance/{function}")
         async def collision_dist_handler(function: str):
             if function == 'start':
+                # check connection status..
+                if self.data_ws is None:
+                    return {'error': 'No connection established with ESP32. Please establish first.'}
+                # when connection already established..
                 if self.data_task is None:
                     self.data_task = asyncio.create_task(
                         esp32._collision_dist_fetcher(self))
@@ -92,7 +109,9 @@ class ESP32Manager:
                     return {"message": "Collision-data task stopped."}
                 else:
                     return {"message": "No collision-data task is currently running."}
-        
+            else:
+                return {'error': 'Invalid function invoked.'}
+
 
 class ConnectionManager:
     def __init__(self):
@@ -112,11 +131,14 @@ class ConnectionManager:
         for connection in self.active_connections:
             await connection.send_text(message)
 
+
 manager = ConnectionManager()
+
 
 class WebManager:
     """Manages all the connections to the web-app.
     """
+
     def __init__(self):
         self.router = APIRouter()
 
