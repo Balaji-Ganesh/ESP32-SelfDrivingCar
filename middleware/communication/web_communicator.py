@@ -8,29 +8,16 @@ import cv2
 import base64
 
 
-def handle_connect(self, ):
-    print("[DEBUG] web: Client connected successfully")
-    self.sock.send({'ack': "Connection established"})
-
-
-def handle_disconnect(self, ):
-    print("[DEBUG] web: Client disconnected successfully")
-    self.sock.send({'ack': "Connection terminated."})
-
-
-def handle_ack(self, data):
-    print("[DEBUG] web: client's ack: ", data)
-
-
 def stream_cam(self):
     from .esp32_communicator import get_cam_feed
     # Stream from esp32  cam feed
     from . import esp32_comm
-    print("------------------------------ object check ----------------------", hasattr(esp32_comm, 'cameraws'))
+    print("------------------------------ object check ----------------------",
+          hasattr(esp32_comm, 'cameraws'))
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(get_cam_feed())
-    
+
     # # Stream from webcam
     # # -- test: First, could able to stream the webcam or not? w/ a separate process or thread.
     # # With threading (after monkey patching), this way working.
