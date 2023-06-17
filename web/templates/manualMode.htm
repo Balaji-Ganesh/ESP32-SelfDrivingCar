@@ -97,7 +97,7 @@
               <tr>
                 <td></td>
                 <td>
-                  <button class="btn btn-block">
+                  <button class="btn btn-block" id="ArrowUp" onclick="listen_navigations(this)">
                     <i class="bi bi-arrow-up"></i>
                   </button>
                 </td>
@@ -105,13 +105,13 @@
               </tr>
               <tr>
                 <td>
-                  <button class="btn btn-block">
+                  <button class="btn btn-block" id="ArrowLeft" onclick="listen_navigations(this)">
                     <i class="bi bi-arrow-left"></i>
                   </button>
                 </td>
                 <td></td>
                 <td>
-                  <button class="btn btn-block">
+                  <button class="btn btn-block" id="ArrowRight" onclick="listen_navigations(this)">
                     <i class="bi bi-arrow-right"></i>
                   </button>
                 </td>
@@ -119,7 +119,7 @@
               <tr>
                 <td></td>
                 <td>
-                  <button class="btn btn-block">
+                  <button class="btn btn-block" id="ArrowDown" onclick="listen_navigations(this)">
                     <i class="bi bi-arrow-down"></i>
                   </button>
                 </td>
@@ -231,6 +231,7 @@
 
 
     //-------------------------------------------------------- Adding event listeners to features..
+    // For toggling ON and OFF of CameraStreaming
     const cam_chkbx = document.getElementById('camera_streaming')
     cam_chkbx.addEventListener('change', (event) => {
       if (event.currentTarget.checked) {
@@ -241,7 +242,8 @@
         console.log("[cam] gave stop command")
       }
     });
-
+    
+    // For toggling ON and OFF of CameraStreaming
     const collision_chkbx = document.getElementById('collision_avoidance')
     collision_chkbx.addEventListener('change', (event) => {
       if (event.currentTarget.checked) {
@@ -252,5 +254,53 @@
         console.log("[coll] gave stop command")
       }
     });
+
+    // For toggling ON and OFF of NavigationControls
+    const navigation_chkbx = document.getElementById('navigation_controls')
+    in_navigation_mode=false // initial state
+    document.getElementById('ArrowUp').disabled=true
+    document.getElementById('ArrowDown').disabled=true
+    document.getElementById('ArrowLeft').disabled=true
+    document.getElementById('ArrowRight').disabled=true
+    
+    navigation_chkbx.addEventListener('change', (event) => {
+      if (event.currentTarget.checked) {
+        socket.emit('navigations', 'start')
+        in_navigation_mode=true
+        // enable the arrow keys
+        document.getElementById('ArrowUp').disabled=false
+        document.getElementById('ArrowDown').disabled=false
+        document.getElementById('ArrowLeft').disabled=false
+        document.getElementById('ArrowRight').disabled=false
+        console.log("[navig] gave start command and now captures arrowkeys.")
+      } else {
+        socket.emit('navigations', 'stop')
+        in_navigation_mode=false
+        // disable the arrow keys
+        document.getElementById('ArrowUp').disabled=true
+        document.getElementById('ArrowDown').disabled=true
+        document.getElementById('ArrowLeft').disabled=true
+        document.getElementById('ArrowRight').disabled=true
+        console.log("[navig] gave stop command and stopped capturing arrowkeys.")
+      }
+    });
+
+    // for capturing the ArrowKeys..
+    keymap = {
+        'ArrowUp':'UP', 'ArrowDown': 'DOWN', 'ArrowLeft':'LEFT', 'ArrowRight':'RIGHT'
+      }// mapping of JS keyboard presses -to-> keys to be sent as direction
+    function listen_navigations(element){
+      if(in_navigation_mode && element.id in keymap)
+        console.log(element.id);
+        // socket.emit('direction', keymap[key])
+    }
+    document.addEventListener('keydown', (event)=>{
+      // only when in navigation mode..
+      if(in_navigation_mode && event.code in keymap){
+        // capture only the arrow key presses..
+        console.log(event.code);
+        // socket.emit('direction', keymap[key])          
+      }
+    })
 </script>
 {% endblock %}
