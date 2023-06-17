@@ -189,7 +189,7 @@
 
     /********************************************* SOCKETIO Connection ******************************************************* */
 
-    const socket = io.connect('http://127.0.0.1:8000'); // url of the python server, later use namespace/room specific to mode
+    const socket = io.connect('http://127.0.0.1:8000/',{path:'/bar/foo', autoReconnect:true}); // url of the python server, later use namespace/room specific to mode
     
     // --------------------------------------------- general socketio handlers --------------------------------------------
     socket.on('connect', function(){
@@ -216,17 +216,16 @@
     // }
 
     // --------------------------------------------- socketio handlers, specifically for features
-    socket.on('img_data', function(msg){
-      console.log("Image received")
+    socket.on('camera_data', function(msg){
+      console.info("Image received")
       const img_element = document.getElementById("cam_img")
       console.log(typeof(img_element))
-      console.log(img_element)
+      // console.log(img_element)
       img_element.src="data:image/jpeg;base64,"+msg;
     })
-    socket.on('collsion_data', function(msg){
-      console.log("collision data received")
+    socket.on('collision_data', function(msg){
+      console.info("collision data received. Data: ", msg)
       const span_element = document.getElementById("collision-dist")
-      console.log(msg)
       span_element.textContent=msg;
     })
 

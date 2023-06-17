@@ -8,6 +8,9 @@ import websockets
 from typing import Any
 import socketio
 import json
+import numpy as np
+import base64
+
 
 class StatusManager(Enum):
     ESTABLISHED = 1  # to indicate - connection is established between two parties
@@ -159,10 +162,12 @@ class WebManager():
 
     def __init__(self):
         self.sio: Any = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins=['http://127.0.0.2:5000', 'ws://127.0.0.2:5000'])
-        self.socket_app = socketio.ASGIApp(socketio_server=self.sio)
+        self.socket_app = socketio.ASGIApp(socketio_server=self.sio, socketio_path='foo')
         self.router = APIRouter()
 
+        # To handle start and stop of features..
         self.collision_task = None
+        self.camera_task = None
 
         @self.router.get('/web')
         def sayhello():
@@ -215,6 +220,30 @@ class WebManager():
                     await self.sio.send(json.dumps({'info': 'Server stopped sending collision feed.'}))
                 else:
                     await self.sio.send(json.dumps({'error': 'Server already stopped collision feed.'}))
+            else:
+                await self.sio.send(json.dumps({'error': 'collsion_feed - sent invalid request'}))
+        
+        @self.sio.on('camera_feed')
+        async def handle_camera_feed(sid, request):
+            print(f"client-{sid} on camera: {request}.")
+            # take the action accordingly..
+            if request == 'start':
+                if self.camera_task is None:
+                    self.camera_task = asyncio.create_task(self.stream_camera_feed())
+                    await self.sio.send(json.dumps({'info': 'Server started stream ESP32 camera feed.'}))
+                else:
+                    await self.sio.send(json.dumps({'error': 'Server already in streaming ESP32 camera feed.'}))
+            elif request == 'stop':
+                if self.camera_task is not None:
+                    self.camera_task.cancel()
+                    try:
+                        await self.camera_task
+                    except asyncio.CancelledError:
+                        pass
+                    self.camera_task = None  # set to empty, to use next time freshly
+                    await self.sio.send(json.dumps({'info': 'Server stopped streaming ESP32 camera feed.'}))
+                else:
+                    await self.sio.send(json.dumps({'error': 'Server already streaming ESP32 camera feed.'}))
             else:
                 await self.sio.send(json.dumps({'error': 'collsion_feed - sent invalid request'}))
 
@@ -294,12 +323,33 @@ class WebManager():
     async def send_collision_data(self):
         logging.debug("came to send collision data")
         from main import esp32_mngr
+        try:
+            while True:
+                logging.debug('Waiting for data...')
+                dist = await esp32_mngr.data_ws.recv()
+                logging.debug("Received collision data: "+ str(dist))
+                await self.sio.emit('collsion_data', dist)
+        except Exception as e:
+            print('[EXCEPTION] An error occured in fetching collision data. Error: ', e)
+            await self.sio.send(json.dumps({"error": "An error occured in fetching collision data from ESP32. \
+                                            Make sure connection is established, and check logs."}))
+    
+    async def stream_camera_feed(self):
+        logging.debug("came to stream camera data")
+        from main import esp32_mngr
         i=0.1
-        while True:
-            # dist = int(await esp32_mngr.data_ws.recv())
-            # print("----------------- data recvd: ", dist, "----------------------------")
-            # for testing purpose..
-            dist = 1 
-            await self.sio.emit('collsion_data', str(dist+i))
-            i+=0.01
+        try:
+            while True:
+                logging.debug('Waiting for data...')
+                data = await esp32_mngr.cam_ws.recv()
+                npimg = np.array(bytearray(data), dtype=np.uint8)
+                img = cv2.imdecode(npimg, -1)
+                frame = cv2.imencode('.jpg', img)[1].tobytes()
+                frame = base64.encodebytes(frame).decode("utf-8")
+                await self.sio.emit('camera_data', frame)
+        except Exception as e:
+            print('[EXCEPTION] An error occured in fetching camera feed. Error: ', e)
+            await self.sio.send(json.dumps({"error": "An error occured in fetching camera from ESP32. \
+                                            Make sure connection is established, and check logs"}))
+                
         
