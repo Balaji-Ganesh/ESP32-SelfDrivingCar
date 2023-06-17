@@ -251,74 +251,7 @@ class WebManager():
         # async def broadcast(sid, msg):
         #     print(f"broadcast {msg}")
         #     await self.sio.emit("event_name", msg)  # or send to everyone
-            
-        @self.router.websocket("/web/collision")
-        async def collision_stream(websocket: WebSocket):
-            from main import conn_mngr, esp32_mngr
-            await conn_mngr.connect(websocket)
-            print("Collision client connected")
-            try:
-                command = await websocket.receive_text()
-                print("received command: ", command)
-                if command == 'start':
-                    try:
-                        while True:
-                            try:
-                                data = await esp32_mngr.data_ws.recv()
-                                print("reveived data: ", data)
-                                await conn_mngr.send_data('test', websocket)
-                            except websockets.exceptions.ConnectionClosedError:
-                                print("Client closed unexpectedly")
-                                break
-                    except WebSocketDisconnect:
-                        conn_mngr.disconnect(websocket)
-                        # await manager.broadcast("A client has disconnected    
-
-
-                    # while True:
-                    #     data = await esp32_mngr.data_ws.recv()
-                    #     print("reveived data: ", data)
-                    #     await conn_mngr.send_data(str(data))
-                    # asyncio.create_task(self.send_collision_data(websocket))
-                    # counter, data=0, 0
-                    # while counter <= 200:
-                    #     # await websocket.send_text(str(counter)) # sending some dummy data
-                    #     counter+=1
-                    #     data = int(await esp32_mngr.data_ws.recv())
-                    #     await websocket.send_text(str(data+counter))
-                    # if esp32_mngr.conn_status == StatusManager.ESTABLISHED:
-                    #     await conn_mngr.send_response({"success": "esp32 connection is active.\n\
-                    #                                 Streaming begins..."}, websocket)
-                    #     print("[DEBUG] About to send to web")
-                    #     if self.collision_task is None:
-                    #         # self.collision_task = asyncio.create_task(esp32_mngr.collision_dist_fetcher(to_web=True, ws=websocket))
-                    #         # await self.collision_task
-                    #         counter=0
-                    #         while counter <= 200:
-                    #             websocket.send_text(str(counter))
-                    #             counter+=1
-                    #     else: logging.error(" collision fetching is already running")
-                    # else:
-                    #     await conn_mngr.send_response({"error": "esp32 connection is inactive. \n\
-                    #                                 First try establishing."}, websocket)
-                elif command == 'stop':
-                    if self.collision_task is not None:
-                        self.collision_task.cancel() # try stopping the task
-                        try:
-                            await self.collision_task
-                        except asyncio.CancelledError:
-                            pass
-                        self.collision_task = None
-                        print("Collision task stopped as per command")
-                        logging.debug({"message": "Collision-data task stopped."})
-                    else:
-                        logging.debug({"message": "No collision-data task is currently running."})
-                else:
-                    return {'error': 'Invalid function invoked for collision feed.'}
-            except WebSocketDisconnect:
-                conn_mngr.disconnect(websocket)
-                # await conn_mngr.broadcast("Collision client disconnected")
-                print('Collision client disconnected')
+        
 
     async def send_collision_data(self):
         logging.debug("came to send collision data")
