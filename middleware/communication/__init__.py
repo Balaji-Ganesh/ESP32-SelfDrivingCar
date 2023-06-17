@@ -4,7 +4,10 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 import cv2
 from enum import Enum
 import logging
-
+import websockets
+from typing import Any
+import socketio
+import json
 
 class StatusManager(Enum):
     ESTABLISHED = 1  # to indicate - connection is established between two parties
@@ -155,36 +158,70 @@ class WebManager():
     conn_status = StatusManager.TERMINATED
 
     def __init__(self):
+        self.sio: Any = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins=['http://127.0.0.2:5000', 'ws://127.0.0.2:5000'])
+        self.socket_app = socketio.ASGIApp(socketio_server=self.sio)
         self.router = APIRouter()
 
         self.collision_task = None
 
         @self.router.get('/web')
         def sayhello():
-            return 'Hello Web app'
+            return 'Hello Web app' 
 
-        @self.router.websocket("/web/stream")
-        async def camera_stream(websocket: WebSocket):
-            from main import conn_mngr, esp32_mngr
-            await conn_mngr.connect(websocket)  # connect to the client
+        # -------------------------------------------- Defining socketio event handlers... -----------------------------
+        @self.sio.on('connect')
+        async def handle_connect(sid, env):
+            print(f"client-{sid} connected.")
+            await self.sio.emit('ack', 'You are now connected to server')
 
-            try:
-                if esp32_mngr.conn_status == StatusManager.ESTABLISHED:
-                    await conn_mngr.send_response({"success": "esp32 connection is active.\n\
-                                                   Streaming begins..."}, websocket)
-                    await esp32_mngr.camera_client(to_web=True, ws=websocket)
-                else:
-                    await conn_mngr.send_response({"error": "esp32 connection is inactive. \n\
-                                                   First try establishing."}, websocket)
-                # while True:
-                #     # data = await websocket.receive_text()
-                #     await conn_mngr.send_data("camera stream", websocket)
-            except WebSocketDisconnect:
-                conn_mngr.disconnect(websocket)
-                # await conn_mngr.broadcast("Camera web-client has disconnected")
-                logging.debug("Camera web-client has disconnected")
+        @self.sio.on('disconnect')
+        async def handle_disconnect(sid):
+            print(f"client-{sid} disconnected.")
+            #FIXME: Here remove all the tasks if pending..
+            
+        @self.sio.on('ack')
+        async def handle_ack(sid, msg):
+            print(f"client-{sid} acknowledges: {msg}.")
+        
+        @self.sio.on('json')
+        async def handle_json(sid, msg):
+            print(f"client-{sid} sends: {msg}.")
+
+        ### -------------------------------------- Handlers, specifically to listen regarding sppecific features.
+        @self.sio.on('camera_feed')
+        async def handle_camera_feed(sid, msg):
+            print(f"client-{sid} on camera: {msg}.")
+            # take the action accordingly..
 
         
+        @self.sio.on('collision_feed')
+        async def handle_collision_feed(sid, request):
+            print(f"client-{sid} on collision: {request}.")
+            # take the action accordingly..
+            if request == 'start':
+                if self.collision_task is None:
+                    self.collision_task = asyncio.create_task(self.send_collision_data())
+                    await self.sio.send(json.dumps({'info': 'Server started sending collision feed.'}))
+                else:
+                    await self.sio.send(json.dumps({'error': 'Server already in sending collision feed.'}))
+            elif request == 'stop':
+                if self.collision_task is not None:
+                    self.collision_task.cancel()
+                    try:
+                        await self.collision_task
+                    except asyncio.CancelledError:
+                        pass
+                    self.collision_task = None  # set to empty, to use next time freshly
+                    await self.sio.send(json.dumps({'info': 'Server stopped sending collision feed.'}))
+                else:
+                    await self.sio.send(json.dumps({'error': 'Server already stopped collision feed.'}))
+            else:
+                await self.sio.send(json.dumps({'error': 'collsion_feed - sent invalid request'}))
+
+        # @self.sio.on("broadcast")
+        # async def broadcast(sid, msg):
+        #     print(f"broadcast {msg}")
+        #     await self.sio.emit("event_name", msg)  # or send to everyone
             
         @self.router.websocket("/web/collision")
         async def collision_stream(websocket: WebSocket):
@@ -195,7 +232,25 @@ class WebManager():
                 command = await websocket.receive_text()
                 print("received command: ", command)
                 if command == 'start':
-                    asyncio.create_task(self.send_collision_data(websocket))
+                    try:
+                        while True:
+                            try:
+                                data = await esp32_mngr.data_ws.recv()
+                                print("reveived data: ", data)
+                                await conn_mngr.send_data('test', websocket)
+                            except websockets.exceptions.ConnectionClosedError:
+                                print("Client closed unexpectedly")
+                                break
+                    except WebSocketDisconnect:
+                        conn_mngr.disconnect(websocket)
+                        # await manager.broadcast("A client has disconnected    
+
+
+                    # while True:
+                    #     data = await esp32_mngr.data_ws.recv()
+                    #     print("reveived data: ", data)
+                    #     await conn_mngr.send_data(str(data))
+                    # asyncio.create_task(self.send_collision_data(websocket))
                     # counter, data=0, 0
                     # while counter <= 200:
                     #     # await websocket.send_text(str(counter)) # sending some dummy data
@@ -236,26 +291,15 @@ class WebManager():
                 # await conn_mngr.broadcast("Collision client disconnected")
                 print('Collision client disconnected')
 
-        @self.router.websocket("/web/navigations")
-        async def navigations(websocket: WebSocket):
-            from main import conn_mngr
-            await conn_mngr.connect(websocket)
-            try:
-
-                while True:
-                    # data = await websocket.receive_text()
-                    await conn_mngr.send_data("navigations", websocket)
-            except WebSocketDisconnect:
-                conn_mngr.disconnect(websocket)
-                # await conn_mngr.broadcast("Camera web-client has disconnected")
-                logging.debug("Camera web-client has disconnected")
-
-    async def send_collision_data(self, ws: WebSocket):
-        print("came to send collision data")
+    async def send_collision_data(self):
+        logging.debug("came to send collision data")
         from main import esp32_mngr
         i=0.1
         while True:
-            data = int(await esp32_mngr.data_ws.recv())
-            print("----------------- data recvd: ", data, "----------------------------")
-            await ws.send_text(str(data))
+            # dist = int(await esp32_mngr.data_ws.recv())
+            # print("----------------- data recvd: ", dist, "----------------------------")
+            # for testing purpose..
+            dist = 1 
+            await self.sio.emit('collsion_data', str(dist+i))
             i+=0.01
+        
