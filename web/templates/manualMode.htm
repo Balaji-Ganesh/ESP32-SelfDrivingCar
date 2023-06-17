@@ -22,28 +22,28 @@
         <div class="form-group">
           <div class="col-sm-offset-2 col-sm-12">
             <div class="checkbox">
-              <label><input type="checkbox" /> Camera Streaming</label>
+              <label><input type="checkbox" id="camera_streaming" value="0"/> Camera Streaming</label>
             </div>
           </div>
         </div>
         <div class="form-group">
           <div class="col-sm-offset-2 col-sm-12">
             <div class="checkbox">
-              <label><input type="checkbox" /> Collision Avoidance</label>
+              <label><input type="checkbox" id="collision_avoidance" value="0"/> Collision Avoidance</label>
             </div>
           </div>
         </div>
         <div class="form-group">
           <div class="col-sm-offset-2 col-sm-12">
             <div class="checkbox">
-              <label><input type="checkbox" /> Navigation Controls</label>
+              <label><input type="checkbox"  id="navigation_controls" value="0"/> Navigation Controls</label>
             </div>
           </div>
         </div>
         <div class="form-group">
           <div class="col-sm-offset-2 col-sm-12">
             <div class="checkbox">
-              <label><input type="checkbox" /> Log messages </label>
+              <label><input type="checkbox" id="log_msgs" value="0"/> Log messages </label>
             </div>
           </div>
         </div>
@@ -57,12 +57,14 @@
         <div class="panel-body">
           <!-- A window like google meet to stream camera data. -->
           <p>Camera Feed</p>
-          <img
-            src="{{ url_for('feed.camera_feed') }}"
-            <!-- When tried the actual url "/feed/camera" getting error. But with this, in browser getting the actual url in source. Wonder..!!  -->
+          <!-- FIXME: Display a dummy image (same size of feed) until user initiates streaming. -->
+          <!-- When tried the actual url "/feed/camera" getting error. But with this, in browser getting the actual url in source. Wonder..!!  -->
+          <!-- <img
             class="img-thumbnail"
             alt="camera feed"
-          />
+            id="cam_feed"
+          /> -->
+          <img id="cam_img">          
           <div class="collision-avoidance-feed">
             <form class="form-inline" action="" method="">
               <div class="form-group">
@@ -80,7 +82,7 @@
             </form>
             <p>
               Collision detected at:
-              <span id="collision-distance">50</span>cm
+              <span id="collision-dist">XX</span>cm
             </p>
           </div>
         </div>
@@ -170,4 +172,85 @@
   </div>
 </div>
 {% endblock %}
+
+{% block socketio_connection %}
+<script type="text/javascript" charset="utf-8">
+  /******************************************************** Necessary setups ... ****************************************/
+    // uncheck all the checkboxes, on loading of page.
+    document.onload = ()=>{
+      var inputs = document.getElementsByTagName('input');
+
+      for (var i=0; i<inputs.length; i++)  {
+        if (inputs[i].type == 'checkbox')   {
+          inputs[i].checked = false;
+        }
+      }
+    }
+
+    /********************************************* SOCKETIO Connection ******************************************************* */
+
+    const socket = io.connect('http://127.0.0.1:8000/',{path:'/bar/foo', autoReconnect:true}); // url of the python server, later use namespace/room specific to mode
     
+    // --------------------------------------------- general socketio handlers --------------------------------------------
+    socket.on('connect', function(){
+      socket.emit('ack', {
+        msg: 'CONN_ESTABLISHED'
+      });
+      console.log('Connected to server')
+    });
+
+    socket.on('disconnect', function(){
+      console.log("Disconnecting with the server")
+      socket.emit('ack', {
+        msg: 'CONN_TERMINATED'
+      });
+    })
+
+    socket.on('message', (data)=>{
+      console.log('server says: ', JSON.parse(data))
+    })
+    
+    // if(confirm("Start streaming?") == true){
+    //   console.log('streaming begins...')
+    //   socket.emit('stream', {msg: 'start streaming'})
+    // }
+
+    // --------------------------------------------- socketio handlers, specifically for features
+    socket.on('camera_data', function(msg){
+      console.info("Image received")
+      const img_element = document.getElementById("cam_img")
+      console.log(typeof(img_element))
+      // console.log(img_element)
+      img_element.src="data:image/jpeg;base64,"+msg;
+    })
+    socket.on('collision_data', function(msg){
+      console.info("collision data received. Data: ", msg)
+      const span_element = document.getElementById("collision-dist")
+      span_element.textContent=msg;
+    })
+
+
+    //-------------------------------------------------------- Adding event listeners to features..
+    const cam_chkbx = document.getElementById('camera_streaming')
+    cam_chkbx.addEventListener('change', (event) => {
+      if (event.currentTarget.checked) {
+        socket.emit('camera_feed', 'start')
+        console.log("[cam] gave start command")
+      } else {
+        socket.emit('camera_feed', 'stop')
+        console.log("[cam] gave stop command")
+      }
+    });
+
+    const collision_chkbx = document.getElementById('collision_avoidance')
+    collision_chkbx.addEventListener('change', (event) => {
+      if (event.currentTarget.checked) {
+        socket.emit('collision_feed', 'start')
+        console.log("[coll] gave start command")
+      } else {
+        socket.emit('collision_feed', 'stop')
+        console.log("[coll] gave stop command")
+      }
+    });
+</script>
+{% endblock %}

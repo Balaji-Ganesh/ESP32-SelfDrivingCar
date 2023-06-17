@@ -1,0 +1,4 @@
+- This folder is to serve web-pages using Flask.
+- Run `python app.py` to run the server for web-pages.
+- No processing happens here, everything at `middleware`.
+- All the communications happen through JS websockets and middleware's websockets.
