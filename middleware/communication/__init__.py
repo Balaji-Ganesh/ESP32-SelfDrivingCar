@@ -192,12 +192,7 @@ class WebManager():
             print(f"client-{sid} sends: {msg}.")
 
         ### -------------------------------------- Handlers, specifically to listen regarding sppecific features.
-        @self.sio.on('camera_feed')
-        async def handle_camera_feed(sid, msg):
-            print(f"client-{sid} on camera: {msg}.")
-            # take the action accordingly..
-
-        
+                
         @self.sio.on('collision_feed')
         async def handle_collision_feed(sid, request):
             print(f"client-{sid} on collision: {request}.")
