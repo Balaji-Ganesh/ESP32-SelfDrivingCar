@@ -189,7 +189,7 @@
 
     /********************************************* SOCKETIO Connection ******************************************************* */
 
-    const socket = io.connect('http://127.0.0.1:8000/',{path:'/bar/foo', autoReconnect:true}); // url of the python server, later use namespace/room specific to mode
+    const socket = io.connect('http://127.0.0.2:8500/',{path:'/bar/foo', autoReconnect:true}); // url of the python server, later use namespace/room specific to mode
     
     // --------------------------------------------- general socketio handlers --------------------------------------------
     socket.on('connect', function(){
@@ -292,14 +292,14 @@
     function listen_navigations(element){
       if(in_navigation_mode && element.id in keymap)
         console.log(element.id);
-        // socket.emit('direction', keymap[key])
+        socket.emit('direction', keymap[element.id])
     }
     document.addEventListener('keydown', (event)=>{
       // only when in navigation mode..
       if(in_navigation_mode && event.code in keymap){
         // capture only the arrow key presses..
         console.log(event.code);
-        // socket.emit('direction', keymap[key])          
+        socket.emit('direction', keymap[event.code])          
       }
     })
 </script>

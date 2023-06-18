@@ -4,7 +4,7 @@ from communication import ESP32Manager, WebManager, ConnectionManager
 import uvicorn
 
 app = FastAPI()
-esp32_mngr = ESP32Manager(esp32IP='192.168.184.165')
+esp32_mngr = ESP32Manager(esp32IP='192.168.147.165')
 conn_mngr = ConnectionManager()
 web = WebManager()
 app.mount('/bar', web.socket_app) # mounting the socketio app to fastapi
@@ -13,5 +13,5 @@ app.include_router(esp32_mngr.router)
 app.include_router(web.router)
 
 
-# if __name__ == "__main__":
-#     uvicorn.run(app, host="127.0.0.2", port=8500)
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.2", port=8500)

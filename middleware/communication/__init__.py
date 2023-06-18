@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Any
 import socketio
 import json
-
+import websockets
 
 class StatusManager(Enum):
     ESTABLISHED = 1  # to indicate - connection is established between two parties
@@ -16,10 +16,13 @@ class StatusManager(Enum):
 class ESP32Manager():
     """Manages all the communication related to the ESP32.
     """
-    # status maintainers -- to use in other modules
+    # status maintainer -- to use in other modules
     conn_status = StatusManager.TERMINATED
+    # websockets to use in another modules..
+    cam_ws = None
+    data_ws = None
     # Get the helpers..
-    from .esp32 import camera_client, collision_dist_fetcher, _connection_establisher, _connection_terminater  # make the
+    from .esp32 import camera_client, collision_dist_fetcher, connection_establisher, _connection_terminater  # make the
 
     def __init__(self, esp32IP: str, cam_port: int = 81, data_port: int = 82):
         # set it to the assigned IP address to ESP32 when connected to WiFi.
@@ -35,9 +38,6 @@ class ESP32Manager():
         self.cam_task = None
         self.data_task = None
 
-        self.cam_ws = None
-        self.data_ws = None
-
         self.task = None
         self.router = APIRouter()
 
@@ -48,20 +48,18 @@ class ESP32Manager():
         @self.router.get("/connection/{function:str}")
         async def connections_handler(function: str):
             if function == 'establish':
-                if self.cam_ws is None and self.data_ws is None:
+                if ESP32Manager.cam_ws is None and ESP32Manager.data_ws is None:
                     task = asyncio.create_task(
-                        self._connection_establisher())
+                        self.connection_establisher())
                     success = await task
-                    ESP32Manager.conn_status = StatusManager.ESTABLISHED
                     return {"message": "Connection to ESP32 established."} if success else {"message": "Failure in ESP32 connection establishment. Please check log."}
                 else:
                     return {"message": "Connections already established."}
             elif function == 'terminate':
-                if self.cam_ws is not None and self.data_ws is not None:
+                if ESP32Manager.cam_ws is not None and ESP32Manager.data_ws is not None:
                     task = asyncio.create_task(
                         self._connection_terminater())
                     success = await task
-                    ESP32Manager.conn_status = StatusManager.TERMINATED
                     return {"message": "ES32 connections terminated successfully.."} if success else {"message": "Failure in termination of ESP32 connections. Please check log."}
                 else:
                     return {"message": "Connections already terminated."}
@@ -72,7 +70,7 @@ class ESP32Manager():
         async def camera_feed_handler(function: str):
             if function == 'start':
                 # check connection status..
-                if self.cam_ws is None:
+                if ESP32Manager.cam_ws is None:
                     return {'error': 'No connection established with ESP32. Please establish first.'}
                 # when connection already established..
                 if self.cam_task is None:
@@ -101,7 +99,7 @@ class ESP32Manager():
         async def collision_dist_handler(function: str):
             if function == 'start':
                 # check connection status..
-                if self.data_ws is None:
+                if ESP32Manager.data_ws is None:
                     return {'error': 'No connection established with ESP32. Please establish first.'}
                 # when connection already established..
                 if self.data_task is None:
@@ -167,6 +165,10 @@ class WebManager():
         # To handle start and stop of features..
         self.collision_task = None
         self.camera_task = None
+
+        # to hold of speed and interval
+        self.speed=150
+        self.interval=52
 
         @self.router.get('/web')
         def sayhello():
@@ -242,6 +244,53 @@ class WebManager():
             else:
                 await self.sio.send(json.dumps({'error': 'collsion_feed - sent invalid request'}))
 
+        @self.sio.on('navigations')
+        async def handle_navigations(sid, request):
+            print(f"client-{sid} on navigations: {request}.")
+            from main import esp32_mngr
+
+            if request == 'start':
+                await self.sio.send(json.dumps({'info': 'Server ready to take navigations.'}))
+                print("status: connection establishment: ", esp32_mngr.conn_status)
+                print("status: websocket status: ", ESP32Manager.data_ws)
+            elif request == 'stop':
+                await self.sio.send(json.dumps({'info': 'Server stopps to take navigations.'}))
+        
+        @self.sio.on('direction')
+        async def handle_direction(sid, request):
+            print(f"client-{sid} on direction: {request}.")
+            from main import esp32_mngr
+            print("status: connection establishment")
+            try:
+                if esp32_mngr.conn_status == StatusManager.ESTABLISHED:
+                    if ESP32Manager.data_ws is not None:
+                        print("Setup ready to send..")
+                        control={
+                            's':self.speed,
+                            'd':str(request),
+                            'i':self.interval
+                        }
+                        await ESP32Manager.data_ws.send(str(control))
+                else:
+                    print("couldn't send data to ESP32")
+            # handle connection close..
+            except websockets.exceptions.ConnectionClosedError as e:
+                print("Oops..!! Connection closed. Auto-Reconnecting... Please wait..")
+                # try reconnecting.. first terminate explicitly ( to avoid multiple connection instances )
+                task = asyncio.create_task(esp32_mngr._connection_terminater())
+                success = await task
+                if success: 
+                    print("Connection cleaned up.!! Establishing fresh connection, please wait..!!")
+                    task = asyncio.create_task(esp32_mngr.connection_establisher())
+                    success = await task
+                    if success:
+                        print("Connection re-established..!!")
+                else:
+                    print("auto-reconnect failed. Please try manually.")
+            # to handle other exceptions..
+            except Exception as e:
+                print("[EXCEPTION] exception occured: ", e)
+                
         # @self.sio.on("broadcast")
         # async def broadcast(sid, msg):
         #     print(f"broadcast {msg}")

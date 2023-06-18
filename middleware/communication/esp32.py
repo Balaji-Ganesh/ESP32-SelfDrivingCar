@@ -8,10 +8,12 @@ from fastapi import WebSocket
 # The below functions will become data members of ESP32Manager in __init__.py
 
 
-async def _connection_establisher(self) -> bool:
+async def connection_establisher(self) -> bool:
+    from . import ESP32Manager, StatusManager
     try:
-        self.cam_ws = await websockets.connect(self.camera_ws_url)
-        self.data_ws = await websockets.connect(self.data_txrx_url)
+        ESP32Manager.cam_ws = await websockets.connect(self.camera_ws_url)
+        ESP32Manager.data_ws = await websockets.connect(self.data_txrx_url)
+        ESP32Manager.conn_status = StatusManager.ESTABLISHED
         return True
     except Exception as e:
         logging.error(
@@ -22,12 +24,14 @@ async def _connection_establisher(self) -> bool:
 
 
 async def _connection_terminater(self) -> bool:
+    from . import ESP32Manager, StatusManager
     try:
         # Close the connection
-        await self.cam_ws.close()
-        await self.data_ws.close()
+        await ESP32Manager.cam_ws.close()
+        await ESP32Manager.data_ws.close()
+        ESP32Manager.conn_status = StatusManager.TERMINATED
         # Empty the connection holders
-        self.cam_ws, self.data_ws = None, None
+        ESP32Manager.cam_ws, ESP32Manager.data_ws = None, None
         return True
     except Exception as e:
         logging.error(
@@ -38,9 +42,10 @@ async def _connection_terminater(self) -> bool:
 
 
 async def camera_client(self, to_web: bool = False, ws: WebSocket = None, ) -> bool:
+    from . import ESP32Manager
     try:
         while True:
-            msg = await self.cam_ws.recv()
+            msg = await ESP32Manager.cam_ws.recv()
             # even try with msg.data
             npimg = np.array(bytearray(msg), dtype=np.uint8)
             img = cv2.imdecode(npimg, -1)
@@ -65,10 +70,11 @@ async def camera_client(self, to_web: bool = False, ws: WebSocket = None, ) -> b
 
 async def collision_dist_fetcher(self, to_web: bool = False, ws: WebSocket = None, ) -> bool:
     counter=0
+    from . import ESP32Manager
     try:
         print("------------------ Collision data fetcher ------------------------------")
         while True:
-            dist = int(await self.data_ws.recv())
+            dist = int(await ESP32Manager.data_ws.recv())
             print(f"Received message: {dist}")
 
             # if need send to web-client..
@@ -92,3 +98,4 @@ async def collision_dist_fetcher(self, to_web: bool = False, ws: WebSocket = Non
         print("[EXCEPTION] data fetching failed. Error: ", e)
         logging.error("Collision data fetching interrupted. Error: ", e)
     return False
+
