@@ -257,22 +257,17 @@ class WebManager():
                 await self.sio.send(json.dumps({'info': 'Server stopps to take navigations.'}))
         
         @self.sio.on('direction')
-        async def handle_direction(sid, request):
-            print(f"client-{sid} on direction: {request}.")
+        async def handle_direction(sid, dir):
+            print(f"client-{sid} on direction: {dir}.")
             from main import esp32_mngr
             print("status: connection establishment")
             try:
                 if esp32_mngr.conn_status == StatusManager.ESTABLISHED:
                     if ESP32Manager.data_ws is not None:
-                        print("Setup ready to send..")
-                        control={
-                            's':self.speed,
-                            'd':str(request),
-                            'i':self.interval
-                        }
-                        await ESP32Manager.data_ws.send(str(control))
+                        payload = 'direction'+','+dir # Arrange in the format, that ESP32 can understand.
+                        await ESP32Manager.data_ws.send(str(payload))
                 else:
-                    print("couldn't send data to ESP32")
+                    print("couldn't able send data to ESP32")
             # handle connection close..
             except websockets.exceptions.ConnectionClosedError as e:
                 print("Oops..!! Connection closed. Auto-Reconnecting... Please wait..")

@@ -55,11 +55,11 @@ void parseNavigationControls(uint8_t *payload, size_t len)
   std::getline(ss, value, ',');
   Serial.printf("[DataTxRx] Key [%s] Value[%s]\n", key.c_str(), value.c_str());
   int valueInt = atoi(value.c_str());
-  if (key == "direction")
+  if (key == "direction") // FIXME: Later shorten to single letter. To reduce payload size.
   {
     moveCar(valueInt);
   }
-  else if (key == "speed")
+  else if (key == "speed") // FIXME: Later shorten to single letter. To reduce payload size.
   {
     ledcWrite(PWMSpeedChannel, valueInt);
   }

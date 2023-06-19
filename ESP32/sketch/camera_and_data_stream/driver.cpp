@@ -35,6 +35,7 @@ const int PWMLightChannel = 3;
 // Utitility functions for controlling the motors...................................................
 void rotateMotor(int motorNumber, int motorDirection)
 {
+  Serial.printf("rotation: %d\n", motorDirection);
   if (motorDirection == FORWARD)
   {
     digitalWrite(motorPins[motorNumber].pinIN1, HIGH);
