@@ -4,7 +4,7 @@
             - taking controlling with bluetooth and collision avoidance
     2. `driver.cpp` of `eesp32_model` branch.
             - taking the operation motors using L298N.
-  
+
   on 27th June, 2023 - Tuesday.
 */
 
@@ -19,15 +19,16 @@
 
 #define RIGHT_MOTOR 0
 #define LEFT_MOTOR 1
-#define NUM_MOTORS 2
+#define NUM_MOTORS 2              // #motors attached to the car
+#define TURNING_SPEED_REDUCER 0.8 // by what constant, turning speed has to be lowered on normal speed (of FWD/BWD).
 
 #define FORWARD 1
 #define BACKWARD -1
 
 #define TRIGGER_PIN A0            // Arduino pin tied to trigger pin on the ultrasonic sensor.
 #define ECHO_PIN A1               // Arduino pin tied to echo pin on the ultrasonic sensor.
-#define MAX_DISTANCE 200          // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
-#define MAX_COLLISION_DISTANCE 10 // At what distance from car, going further fwd is to be stopped.
+#define MAX_DISTANCE 220          // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
+#define MAX_COLLISION_DISTANCE 20 // At what distance from car, going further fwd is to be stopped.
 
 // setup for motor controls
 struct MOTOR_PINS
@@ -48,6 +49,13 @@ int buzzerPin = A2;
 int redLedPin = A3;
 int greenLedPin = A4;
 int collision_distance = 0; // to perform other actions based on collision..
+
+// a global variable to store the navigation received.
+int navigation = STOP;      // default: STOP state.
+String tempStrSpeed = "";   // default: empty
+int speed = 0;              // default: 0
+bool inTurnMode = false;    // whether turning LEFT or RIGHT. To lower the speed while turning. Default: No
+int stateBeforeTurn = STOP; // to store the state of navigation, before making turn. For setting back to previous state after making turn.
 
 // Utitility functions for controlling the motors...................................................
 /**
@@ -79,21 +87,53 @@ void rotateMotor(int motorNumber, int motorDirection)
 }
 
 /**
- * Receives the command in which the car has to be moved and splits it to execute in low-level with L298N.
- * The commands should match with `config.h`. This doesn't perform verification of proper command. If invalid command is recived, executes as STOP.
+ * Moves the car as per the navigation set.
+ *
  *
  *
  * @param inputValue: Integer command as per `config.h`
  * @return nothing.
  */
-void moveCar(int inputValue)
+void moveCar()
 {
   // Serial.print("[MoveCar] Got value as : ");
   // Serial.println(inputValue);
-  switch (inputValue){
+  Serial.print("Nav: ");
+  Serial.print(navigation);
+  Serial.print(" .... ");
+  Serial.print("Speed: ");
+  Serial.print(speed);
+  Serial.print(" .... ");
+
+  // Set the appropriate speed as per the navigation.
+  // i.e., If FWD or BWD - speed as set. otherwise (LFT or RGT) `speed`*TURNING_SPEED_REDUCER
+  if (inTurnMode)
+  {
+    int tempSpeed = speed * TURNING_SPEED_REDUCER; // lower the speed for turning.
+    analogWrite(motorPins[0].pinEn, tempSpeed);
+    analogWrite(motorPins[1].pinEn, tempSpeed);
+  }
+  else
+  {
+    analogWrite(motorPins[0].pinEn, speed);
+    analogWrite(motorPins[1].pinEn, speed);
+  }
+
+  // perform the navigation..
+  switch (navigation)
+  {
   case UP:
-    rotateMotor(RIGHT_MOTOR, FORWARD);
-    rotateMotor(LEFT_MOTOR, FORWARD);
+    if (collision_distance >= MAX_COLLISION_DISTANCE)
+    {
+      rotateMotor(RIGHT_MOTOR, FORWARD);
+      rotateMotor(LEFT_MOTOR, FORWARD);
+    }
+    else
+    {
+      Serial.println("!!Warning!!: Collision ahead. Cannot go FWD, try other directions.");
+      rotateMotor(RIGHT_MOTOR, STOP);
+      rotateMotor(LEFT_MOTOR, STOP);
+    }
     break;
 
   case DOWN:
@@ -129,15 +169,32 @@ void receive_control_commands()
   if (Serial.available() > 0)
   {
     char data = Serial.read();
-    Serial.print("Received data: ");
+    Serial.print("[INFO] Received data: ");
     Serial.println(data);
-    set_dir_command(data); // perform direction.
+
+    if (isDigit(data))
+    { // check is it speed or navigation
+      tempStrSpeed += (char)data;
+    }
+    else
+    {
+      // set the speed of the motors.
+      if (tempStrSpeed != "")
+      { // if speed has set to update..
+        Serial.print("Speed setting to : ");
+        Serial.println(tempStrSpeed);
+        speed = tempStrSpeed.toInt();
+        tempStrSpeed = ""; // set back to empty, after speed has changed.
+      }
+      set_dir_command(data); // perform direction.
+    }
   }
-  else
-  { // When received no command -- stop.
-    // Serial.println("[INFO] No command received: STOP state.");
-    set_dir_command('S');
-  }
+  // else
+  // { // When received no command -- stop.
+  //   // Serial.println("[INFO] No command received: STOP state.");
+  //   if(navigation != STOP)  // Set to STOP, if not in STOP state.
+  //     set_dir_command('S');
+  // }
 }
 
 void set_dir_command(char command)
@@ -179,59 +236,79 @@ void set_dir_command(char command)
   case 'F':
   {
     Serial.println("FORWARD");
-    if (collision_distance <= MAX_COLLISION_DISTANCE)
-    {
-      Serial.println("!!Warning!!: Collision ahead. Cannot go FWD, try other directions.");
-      moveCar(STOP);
-    }
-    else
-    {
-      moveCar(UP);
-    }
+    navigation = UP;
+    inTurnMode = false;
     break;
   }
   case 'B':
   {
     Serial.println("BACKWARD");
-    moveCar(DOWN);
+    navigation = DOWN;
+    inTurnMode = false;
     break;
   }
   case 'L':
   {
     Serial.println("LEFT");
-    moveCar(LEFT);
+    // Implementing the toggling system for turning.
+    // on first command of LEFT, store the current navigation before setting left.
+    if (navigation != LEFT && navigation != RIGHT)
+    {
+      stateBeforeTurn = navigation;
+      navigation = LEFT;
+      inTurnMode = true;
+    }
+    // upon second command of LEFT, set back to previous state.
+    else
+    {
+      navigation = stateBeforeTurn;
+      inTurnMode = false;
+    }
+
     break;
   }
   case 'R':
   {
     Serial.println("RIGHT");
-    moveCar(RIGHT);
+    // Implementing the toggling system for turning.
+    // on first command of RIGHT, store the current navigation before setting right.
+    if (navigation != LEFT && navigation != RIGHT)
+    {
+      stateBeforeTurn = navigation;
+      navigation = RIGHT;
+      inTurnMode = true;
+    }
+    // upon second command of RIGHT, set back to previous state.
+    else
+    {
+      navigation = stateBeforeTurn;
+      inTurnMode = false;
+    }
     break;
   }
-  // case 'V':
-  //   {
-  //     Serial.println('Horn ON');
-  //     analogWrite(hornPin, HIGH);
-  //     break;
-  //   }
-  // case 'v':
-  //   {
-  //     Serial.println('Horn OFF');
-  //     analogWrite(hornPin, LOW);
-  //     break;
-  //   }
   case 'S':
   {
     Serial.println("STOP");
-    moveCar(STOP);
+    navigation = STOP;
   }
-  default:
-  {
-    Serial.print("STOP");
-    Serial.println(command);
-    moveCar(STOP);
-    break;
-  }
+    // case 'V':
+    //   {
+    //     Serial.println('Horn ON');
+    //     analogWrite(hornPin, HIGH);
+    //     break;
+    //   }
+    // case 'v':
+    //   {
+    //     Serial.println('Horn OFF');
+    //     analogWrite(hornPin, LOW);
+    //     break;
+    //   }
+    // default:
+    // {
+    //   Serial.print("STOP.................................................................................................................!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    //   navigation = STOP;
+    //   break;
+    // }
   }
 }
 
@@ -271,7 +348,7 @@ void setup()
     pinMode(motorPins[i].pinIN1, OUTPUT);
     pinMode(motorPins[i].pinIN2, OUTPUT);
   }
-  moveCar(STOP);
+  navigation = STOP; // by default set to STOP state.
 
   // setup the pins of collision avoidance
   pinMode(buzzerPin, OUTPUT);
@@ -283,4 +360,5 @@ void loop()
 {
   receive_control_commands();
   pingCollisionDistance();
+  moveCar(); // keep the car move in the configured navigation.
 }
